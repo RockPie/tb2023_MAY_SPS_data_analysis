@@ -2,3 +2,4 @@ dataFiles/*
 cachedFiles/*
 .vscode/*
 .gitignore
+build/*

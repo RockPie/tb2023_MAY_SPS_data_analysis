@@ -1,9 +1,14 @@
 #include <iostream>
 #include <TFile.h>
 #include <TTree.h>
+#include <TSystem.h>
+#include "./include/SJ_datareading.h"
 
-int Sketch1(){
-    std::cout << "Hello World!" << std::endl;
+int main(){
+    //gSystem->AddIncludePath("./include");
+    //gSystem->AddIncludePath("./src");
+    CAEN_data_reader *reader = new CAEN_data_reader();
+    delete reader;
     TFile *file_ptr = new TFile("Sketch1.root", "RECREATE");
     TTree *tree_ptr = new TTree("tree", "tree");
     Int_t x = 0;
