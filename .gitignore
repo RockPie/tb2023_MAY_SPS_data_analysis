@@ -1,3 +1,4 @@
-./dataFiles/*
-./cachedFiles/*
-./.vscode/*
+dataFiles/*
+cachedFiles/*
+.vscode/*
+.gitignore
