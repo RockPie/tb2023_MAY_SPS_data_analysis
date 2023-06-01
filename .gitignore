@@ -3,3 +3,4 @@ cachedFiles/*
 .vscode/*
 .gitignore
 build/*
+.DS_Store
