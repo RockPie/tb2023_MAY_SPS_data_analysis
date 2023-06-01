@@ -60,7 +60,8 @@
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
-        "/opt/homebrew/Cellar/root/6.26.06_2/include/root"
+        "/opt/homebrew/Cellar/root/6.26.06_2/include/root",
+        "./include",
     ],
     "code-runner.executorMapByFileExtension": {
         "cxx": "cd $dir && root $fileName",

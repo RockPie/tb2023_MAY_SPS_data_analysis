@@ -1,11 +1,22 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
+set(CMAKE_CXX_STANDARD 17)
 project(sketchprj1)
 
-find_package(ROOT REQUIRED COMPONENTS Core Tree)
+find_package(ROOT REQUIRED COMPONENTS 
+    Core 
+    Tree
+)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_library(sketchprj1 SHARED src/SJ_datareading.cxx)
-target_link_libraries(sketchprj1 PUBLIC ROOT::Core ROOT::Tree)
+add_library(sketchprj1 SHARED 
+    src/SJ_datareading.cxx
+    src/easylogging++.cc
+)
+target_link_libraries(sketchprj1 PUBLIC 
+    ROOT::Core 
+    ROOT::Tree
+)
 
 add_executable(Main Sketch1.cxx)
 target_link_libraries(Main PUBLIC sketchprj1)
+
