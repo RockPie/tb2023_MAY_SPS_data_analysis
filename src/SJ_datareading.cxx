@@ -395,3 +395,59 @@ bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, 
     LOG(INFO) << "Frame info array is written to root file!";
     return true;
 }
+
+bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
+    reset_frame_vector();
+    TFile *_root_file_ptr = new TFile(_root_file_name, "READ");
+    if (_root_file_ptr->IsZombie()) {
+        LOG(ERROR) << "Root file cannot be opened!";
+        return false;
+    }
+
+    TTree *_tree_ptr = (TTree*)_root_file_ptr->Get("frames");
+
+    Short_t _board_num;
+    Double_t _timestamp;
+    Int_t _trigID;
+    std::vector<Short_t> *_CH_ptr = nullptr;
+    std::vector<Short_t> *_HG_charge_ptr = nullptr;
+    std::vector<Short_t> *_LG_charge_ptr = nullptr;
+    std::vector<Short_t> *_TS_ptr = nullptr;
+    std::vector<Short_t> *_ToT_ptr = nullptr;
+
+    _tree_ptr->SetBranchAddress("board_num", &_board_num);
+    _tree_ptr->SetBranchAddress("timestamp", &_timestamp);
+    _tree_ptr->SetBranchAddress("trigID", &_trigID);
+    _tree_ptr->SetBranchAddress("CH", &_CH_ptr);
+    _tree_ptr->SetBranchAddress("HG_charge", &_HG_charge_ptr);
+    _tree_ptr->SetBranchAddress("LG_charge", &_LG_charge_ptr);
+    _tree_ptr->SetBranchAddress("TS", &_TS_ptr);
+    _tree_ptr->SetBranchAddress("ToT", &_ToT_ptr);
+
+    auto _n_entries = _tree_ptr->GetEntries();
+    LOG(INFO) << "Number of entries: " << _n_entries;
+
+    for (auto i = 0; i < _n_entries; i++){
+        _tree_ptr->GetEntry(i);
+        FrameInfo _frame_info;
+        _frame_info.nboards     = _board_num;
+        _frame_info.timestamp   = _timestamp;
+        _frame_info.trigID      = _trigID;
+        _frame_info.CH          = *_CH_ptr;
+        _frame_info.HG_charge   = *_HG_charge_ptr;
+        _frame_info.LG_charge   = *_LG_charge_ptr;
+        _frame_info.TS          = *_TS_ptr;
+        _frame_info.ToT         = *_ToT_ptr;
+        this->frame_info_array->push_back(_frame_info);
+    }
+
+    auto _frame_info_array_size = this->frame_info_array->size();
+    LOG(INFO) << "Frame info array size: " << _frame_info_array_size;
+    if (_frame_info_array_size == 0)
+        return false;
+    else
+        flag_frame_info_array_valid = true;
+
+    return true;
+
+}

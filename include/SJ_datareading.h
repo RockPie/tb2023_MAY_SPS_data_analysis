@@ -102,10 +102,17 @@ public:
         return write_frame_array2root_file(_root_file_name, this->frame_info_array);
     };
 
+    // * Read std::vector<FrameInfo> from root file
+    // * Param: _root_file_name:  root file name
+    // * Return true if success, false if failed
+    bool read_root_file2frame_array(const char *_root_file_name);
 
 
 private:
+    // * Create file stream pointer based on file name
     bool create_file_ptr();
+
+    // * Extract run number from in-class file name
     inline Int_t get_run_number(){
         if (!flag_caen_file_valid){
             LOG(ERROR) << "CAEN file is not valid for run number!";
@@ -113,7 +120,11 @@ private:
         }
         return get_run_number(this->caen_file_name);
     };
+
+    // * Extract run number from file name
     Int_t get_run_number(const std::string *_file_name);
+
+    // * Get file pointer back to the beginning
     inline void reset_file_ptr(){
         if (!flag_caen_file_opened) {
             LOG(ERROR) << "CAEN file is not opened!";
@@ -121,6 +132,15 @@ private:
         }
         this->caen_file_ptr->clear();
         this->caen_file_ptr->seekg(0, std::ios::beg);
+    };
+
+    // * Reset frame info array
+    inline void reset_frame_vector(){
+        if (frame_info_array == nullptr) {
+            frame_info_array = new std::vector<FrameInfo>;
+        }
+        this->frame_info_array->clear();
+        this->flag_frame_info_array_valid = false;
     };
     
 private:
