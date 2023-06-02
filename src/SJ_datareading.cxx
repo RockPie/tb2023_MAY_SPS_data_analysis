@@ -38,8 +38,11 @@ CAEN_data_reader::~CAEN_data_reader(){
         delete caen_file_name;
     if (caen_file_ptr != nullptr)
         delete caen_file_ptr;
-    if (flag_frame_info_array_valid)
+    if (flag_frame_info_array_valid){
+        frame_info_array->clear();
+        frame_info_array->resize(0);
         delete frame_info_array;
+    }
 }
 
 bool CAEN_data_reader::set_caen_file(const char *_file_name){
@@ -449,5 +452,4 @@ bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
         flag_frame_info_array_valid = true;
 
     return true;
-
 }
