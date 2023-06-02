@@ -31,21 +31,13 @@ INITIALIZE_EASYLOGGINGPP
 class CAEN_data_reader {
 public:
     struct FrameInfo {
-        Char_t    nboards;    // 1-byte int
+        Short_t    nboards;   // 2-byte int
         Double_t  timestamp;  // 8-byte float
         Long_t    trigID;     // 8-byte int
         std::vector<Short_t> HG_charge; // 2-byte int
         std::vector<Short_t> LG_charge; // 2-byte int 
         std::vector<Short_t> TS;        // 2-byte int 
         std::vector<Short_t> ToT;       // 2-byte int
-    };
-
-    struct Event {
-        Int_t id;         // 4-byte int
-        Double_t ts0;     // 8-byte float
-        Double_t ts1;     // 8-byte float
-        std::map<UShort_t, UShort_t> charge0; // 2-byte int
-        std::map<UShort_t, UShort_t> charge1; // 2-byte int
     };
     
 public: 
@@ -67,6 +59,11 @@ public:
             return nullptr;
         }
         return this->frame_info_array;
+    };
+
+    bool write_frame_array2root_file(const char *_root_file_name, std::vector<FrameInfo> *_frame_info_array_ptr);
+    inline bool write_frame_array2root_file(const char *_root_file_name){
+        return write_frame_array2root_file(_root_file_name, this->frame_info_array);
     };
 
 private:

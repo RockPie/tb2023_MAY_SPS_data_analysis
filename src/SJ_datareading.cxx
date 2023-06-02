@@ -173,17 +173,19 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
 
     while(!_divider_found && !caen_file_ptr->eof()){
         std::getline(*caen_file_ptr, _line);
-        // ! sort line type based on first two characters
+        // * Sort line type based on first two characters
         auto _line_type = _line.substr(0, 2);
         if (_line_type == "Bo"){
             _frame_info.nboards = std::stoi(_line.substr(6, 1));
             _board_num_found = true;
         }
         else if (_line_type == "TS") {
+            // TODO: make sure the length of 10 is enough
             _frame_info.timestamp = std::stod(_line.substr(3, 10));
             _timestamp_found = true;
         }
         else if (_line_type == "Tr") {
+            // TODO: make sure the length of 6 is enough
             _frame_info.trigID = std::stoi(_line.substr(6, 6));
             _trigid_found = true;
         }
@@ -196,6 +198,7 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
             
         else {
             // ! divide by space
+            // TODO: implement this
             if (_get_chn_val){
 
             }
@@ -275,5 +278,61 @@ bool CAEN_data_reader::extract_frame_info_array(long _n_frames, bool _get_chn_va
         return false;
     else
         flag_frame_info_array_valid = true;
+    return true;
+}
+
+bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, std::vector<FrameInfo> *_frame_info_array_ptr){
+    if (strlen(_root_file_name) == 0) {
+        LOG(ERROR) << "Root file name is empty!";
+        return false;
+    }
+    if (!flag_frame_info_array_valid) {
+        LOG(ERROR) << "Frame info array is not valid!";
+        return false;
+    }
+
+    TFile *_root_file_ptr = new TFile(_root_file_name, "RECREATE");
+    if (_root_file_ptr->IsZombie()) {
+        LOG(ERROR) << "Root file cannot be opened!";
+        return false;
+    }
+
+    auto _frame_info_array_size = _frame_info_array_ptr->size();
+    LOG(INFO) << "Writing frame info array to root file...";
+
+    TTree *_tree_ptr = new TTree("frames", "Frame data");
+
+    Short_t _board_num;
+    Double_t _timestamp;
+    Int_t _trigID;
+    std::vector<Short_t> _HG_charge;
+    std::vector<Short_t> _LG_charge;
+    std::vector<Short_t> _TS;
+    std::vector<Short_t> _ToT;
+
+    // ! create branches
+    _tree_ptr->Branch("board_num", &_board_num);
+    _tree_ptr->Branch("timestamp", &_timestamp);
+    _tree_ptr->Branch("trigID", &_trigID);
+    _tree_ptr->Branch("HG_charge", &_HG_charge);
+    _tree_ptr->Branch("LG_charge", &_LG_charge);
+    _tree_ptr->Branch("TS", &_TS);
+    _tree_ptr->Branch("ToT", &_ToT);
+
+    for (const auto& _frame: *_frame_info_array_ptr){
+        _board_num  = _frame.nboards;
+        _timestamp  = _frame.timestamp;
+        _trigID     = _frame.trigID;
+        _HG_charge  = _frame.HG_charge;
+        _LG_charge  = _frame.LG_charge;
+        _TS         = _frame.TS;
+        _ToT        = _frame.ToT;
+        _tree_ptr->Fill();
+    }
+
+    _tree_ptr->Write();
+    _root_file_ptr->Close();
+
+    LOG(INFO) << "Frame info array is written to root file!";
     return true;
 }
