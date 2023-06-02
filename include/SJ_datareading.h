@@ -41,18 +41,45 @@ public:
     };
     
 public: 
+    // * Default constructor
     CAEN_data_reader();
+    // * Constructor
+    // * Param: _file_name: CAEN file name
     explicit CAEN_data_reader(const char *_file_name);
     ~CAEN_data_reader();
 
 public:
+    // * Set CAEN file name
+    // * Param: _file_name: CAEN file name
+    // * Note: this function will reset the file stream and total line number
+    // * Return true if success, false if failed
     bool set_caen_file(const char *_file_name);
+
+    // * Print CAEN file header
+    // * Note: this function will read first 6 lines of the file
     void print_caen_file_header();
+
+    // * Get line number of CAEN file
+    // * Note: this function will read the whole file
+    // * Return line number if success, INVALID_RUN_NUMBER if failed
     ULong64_t get_line_num();
+
+    // * Extract frame info from CAEN file
+    // * Param: _get_chn_val:  whether to extract channel value
+    // *        _flag_end:     indicate whether the end of file is reached,
+    // *                       mainly for extract_frame_info_array()
+    // * Return std::optional<FrameInfo> if success, std::nullopt if failed
     std::optional<FrameInfo> extract_frame_info(bool _get_chn_val = true);
     std::optional<FrameInfo> extract_frame_info(bool &_flag_end, bool _get_chn_val);
+
+    // * Extract frame info array from CAEN file
+    // * Param: _n_frames:     number of frames to extract, default to INFINITE_FRAMES
+    // *        _get_chn_val:  whether to extract channel value
+    // * Return true if success, false if failed
     bool extract_frame_info_array(long _n_frames = INFINITE_FRAMES, bool _get_chn_val = true);
 
+    // * Get std::vector<FrameInfo> pointer
+    // * Return std::vector<FrameInfo> pointer if success, nullptr if failed
     inline std::vector<FrameInfo> * get_frame_info_array_ptr(){
         if (!flag_frame_info_array_valid) {
             LOG(ERROR) << "Frame info array is not valid for ptr return!";
@@ -61,6 +88,10 @@ public:
         return this->frame_info_array;
     };
 
+    // * Write std::vector<FrameInfo> to root file
+    // * Param: _root_file_name:        root file name
+    // *        _frame_info_array_ptr:  pointer to std::vector<FrameInfo>
+    // * Return true if success, false if failed
     bool write_frame_array2root_file(const char *_root_file_name, std::vector<FrameInfo> *_frame_info_array_ptr);
     bool write_frame_array2root_file();
     inline bool write_frame_array2root_file(const char *_root_file_name){
@@ -70,6 +101,8 @@ public:
         }
         return write_frame_array2root_file(_root_file_name, this->frame_info_array);
     };
+
+
 
 private:
     bool create_file_ptr();
