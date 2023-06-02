@@ -141,7 +141,21 @@ Int_t CAEN_data_reader::get_run_number(const std::string *_file_name){
 
     auto _run_number_str = _file_name_str.substr(_pos_2 + 3, _pos_1 - _pos_2 - 3);
 
-    return std::stoi(_run_number_str);
+
+    auto _res = INVALID_RUN_NUMBER;
+    try {
+        _res = std::stoi(_run_number_str);
+    }
+    catch (const std::invalid_argument &ia){
+        LOG(ERROR) << "Invalid argument: " << ia.what();
+        return INVALID_RUN_NUMBER;
+    }
+    catch (const std::out_of_range &oor){
+        LOG(ERROR) << "Out of Range error: " << oor.what();
+        return INVALID_RUN_NUMBER;
+    }
+
+    return _res;
 }
 
 // * Line types are:
@@ -176,18 +190,42 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
         // * Sort line type based on first two characters
         auto _line_type = _line.substr(0, 2);
         if (_line_type == "Bo"){
-            _frame_info.nboards = std::stoi(_line.substr(6, 1));
-            _board_num_found = true;
+            try {
+                _frame_info.nboards = std::stoi(_line.substr(6));
+                _board_num_found = true;
+            }
+            catch (const std::invalid_argument& _err) {
+                LOG(ERROR) << "Invalid board number with " << _line.substr(6);
+            }
+            catch (const std::out_of_range& _err) {
+                LOG(ERROR) << "Out of range board number with " << _line.substr(6);
+            }
         }
         else if (_line_type == "TS") {
             // TODO: make sure the length of 10 is enough
-            _frame_info.timestamp = std::stod(_line.substr(3, 10));
-            _timestamp_found = true;
+            try {
+                _frame_info.timestamp = std::stod(_line.substr(3));
+                _timestamp_found = true;
+            }
+            catch (const std::invalid_argument& _err) {
+                LOG(ERROR) << "Invalid timestamp with " << _line.substr(3);
+            }
+            catch (const std::out_of_range& _err) {
+                LOG(ERROR) << "Out of range timestamp with " << _line.substr(3);
+            }
         }
         else if (_line_type == "Tr") {
             // TODO: make sure the length of 6 is enough
-            _frame_info.trigID = std::stoi(_line.substr(6, 6));
-            _trigid_found = true;
+            try {
+                _frame_info.trigID = std::stoi(_line.substr(6));
+                _trigid_found = true;
+            }
+            catch (const std::invalid_argument& _err) {
+                LOG(ERROR) << "Invalid trigger ID with " << _line.substr(6);
+            }
+            catch (const std::out_of_range& _err) {
+                LOG(ERROR) << "Out of range trigger ID with " << _line.substr(6);
+            }
         }
         else if (_line_type == "CH")
             _data_type_found = true;
@@ -200,9 +238,22 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
             // ! divide by space
             // TODO: implement this
             if (_get_chn_val){
-
+                LOG_IF(!_data_type_found, WARNING) << "Data without type line!";
+                std::istringstream _iss(_line);
+                Short_t _CH         = INVALID_CHN_VALUE;
+                Short_t _HG_charge  = INVALID_CHN_VALUE;
+                Short_t _LG_charge  = INVALID_CHN_VALUE;
+                Short_t _TS         = INVALID_CHN_VALUE;
+                Short_t _ToT        = INVALID_CHN_VALUE;
+                _iss >> _CH >> _HG_charge >> _LG_charge >> _TS >> _ToT;
+                _frame_info.CH.push_back(_CH);
+                _frame_info.HG_charge.push_back(_HG_charge);
+                _frame_info.LG_charge.push_back(_LG_charge);
+                _frame_info.TS.push_back(_TS);
+                _frame_info.ToT.push_back(_ToT);
             }
             else {
+                _frame_info.CH.push_back(INVALID_CHN_VALUE);
                 _frame_info.HG_charge.push_back(INVALID_CHN_VALUE);
                 _frame_info.LG_charge.push_back(INVALID_CHN_VALUE);
                 _frame_info.TS.push_back(INVALID_CHN_VALUE);
@@ -281,16 +332,21 @@ bool CAEN_data_reader::extract_frame_info_array(long _n_frames, bool _get_chn_va
     return true;
 }
 
+bool CAEN_data_reader::write_frame_array2root_file(){
+    auto _run_number = this->get_run_number();
+    std::string _root_file_name_str = DEFAULT_ROOT_FILE_FOLDER;
+    _root_file_name_str = _root_file_name_str + "Run_";
+    _root_file_name_str = _root_file_name_str + std::to_string(_run_number) + ".root";
+
+    return this->write_frame_array2root_file(_root_file_name_str.c_str());
+}
+
 bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, std::vector<FrameInfo> *_frame_info_array_ptr){
     if (strlen(_root_file_name) == 0) {
         LOG(ERROR) << "Root file name is empty!";
         return false;
     }
-    if (!flag_frame_info_array_valid) {
-        LOG(ERROR) << "Frame info array is not valid!";
-        return false;
-    }
-
+    
     TFile *_root_file_ptr = new TFile(_root_file_name, "RECREATE");
     if (_root_file_ptr->IsZombie()) {
         LOG(ERROR) << "Root file cannot be opened!";
@@ -305,6 +361,7 @@ bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, 
     Short_t _board_num;
     Double_t _timestamp;
     Int_t _trigID;
+    std::vector<Short_t> _CH;
     std::vector<Short_t> _HG_charge;
     std::vector<Short_t> _LG_charge;
     std::vector<Short_t> _TS;
@@ -314,6 +371,7 @@ bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, 
     _tree_ptr->Branch("board_num", &_board_num);
     _tree_ptr->Branch("timestamp", &_timestamp);
     _tree_ptr->Branch("trigID", &_trigID);
+    _tree_ptr->Branch("CH", &_CH);
     _tree_ptr->Branch("HG_charge", &_HG_charge);
     _tree_ptr->Branch("LG_charge", &_LG_charge);
     _tree_ptr->Branch("TS", &_TS);
@@ -323,6 +381,7 @@ bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, 
         _board_num  = _frame.nboards;
         _timestamp  = _frame.timestamp;
         _trigID     = _frame.trigID;
+        _CH         = _frame.CH;
         _HG_charge  = _frame.HG_charge;
         _LG_charge  = _frame.LG_charge;
         _TS         = _frame.TS;

@@ -14,16 +14,15 @@
 #define DEFAULT_BOARD_NUMBER         4
 #define DEFAULT_CHANNEL_NUMBER       64
 #define INFINITE_FRAMES             -1
+#define DEFAULT_ROOT_FILE_FOLDER     "../cachedFiles/"
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <fstream>      // for file reading
+#include <string>       // for std::string operations
 #include <stdexcept>    // for std::stio
-#include <map>
-#include <optional>
-#include <vector>
-#include <TFile.h>
-#include <TTree.h>
+#include <optional>     // for std::optional
+#include <vector>       // for std::vector
+#include <TFile.h>      // for root file writing/reading
+#include <TTree.h>      // for creating root tree
 #include "easylogging++.h"  // for logging
 
 INITIALIZE_EASYLOGGINGPP
@@ -34,6 +33,7 @@ public:
         Short_t    nboards;   // 2-byte int
         Double_t  timestamp;  // 8-byte float
         Long_t    trigID;     // 8-byte int
+        std::vector<Short_t> CH;   // 2-byte int
         std::vector<Short_t> HG_charge; // 2-byte int
         std::vector<Short_t> LG_charge; // 2-byte int 
         std::vector<Short_t> TS;        // 2-byte int 
@@ -55,19 +55,31 @@ public:
 
     inline std::vector<FrameInfo> * get_frame_info_array_ptr(){
         if (!flag_frame_info_array_valid) {
-            LOG(ERROR) << "Frame info array is not valid!";
+            LOG(ERROR) << "Frame info array is not valid for ptr return!";
             return nullptr;
         }
         return this->frame_info_array;
     };
 
     bool write_frame_array2root_file(const char *_root_file_name, std::vector<FrameInfo> *_frame_info_array_ptr);
+    bool write_frame_array2root_file();
     inline bool write_frame_array2root_file(const char *_root_file_name){
+        if (!flag_frame_info_array_valid) {
+            LOG(ERROR) << "Frame info array is not valid for saving!";
+            return false;
+        }
         return write_frame_array2root_file(_root_file_name, this->frame_info_array);
     };
 
 private:
     bool create_file_ptr();
+    inline Int_t get_run_number(){
+        if (!flag_caen_file_valid){
+            LOG(ERROR) << "CAEN file is not valid for run number!";
+            return INVALID_RUN_NUMBER;
+        }
+        return get_run_number(this->caen_file_name);
+    };
     Int_t get_run_number(const std::string *_file_name);
     inline void reset_file_ptr(){
         if (!flag_caen_file_opened) {
