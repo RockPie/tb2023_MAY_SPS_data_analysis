@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <TH1.h>
 #include <TCanvas.h>
+#include <TFile.h>
+#include <TTree.h>
 
 #include "SJ_datareading.h"
 #include "easylogging++.h"  // for logging
@@ -41,10 +43,11 @@ public:
     // * return: true if success, false if failed
     bool reconstruct_event(std::vector<CAEN_data_reader::FrameInfo> *_frame_array_ptr, int _frame_num = EVENT_FRAME_NUM);
 
-
     std::vector<Int_t> get_event_sum_array();
 
-    
+    bool write_event_array2root_file(const char *_root_file_name);
+    bool read_root_file2event_array(const char *_root_file_name);
+
 private:
     std::vector<EventInfo> *event_array_ptr;
     std::vector<bool> *event_valid_array_ptr;

@@ -104,3 +104,103 @@ std::vector<Int_t> CAEN_event_builder::get_event_sum_array() {
     }
     return _event_sum_array;
 }
+
+bool CAEN_event_builder::write_event_array2root_file(const char *_root_file_name) {
+    if (strlen(_root_file_name) == 0) {
+        LOG(ERROR) << "Root file name is empty!";
+        return false;
+    }
+
+    TFile *_root_file_ptr = new TFile(_root_file_name, "RECREATE");
+    if (_root_file_ptr->IsZombie()) {
+        LOG(ERROR) << "Root file cannot be opened!";
+        return false;
+    }
+
+    auto _event_array_size = event_array_ptr->size();
+    LOG(INFO) << "Writing events to root file...";
+
+    TTree *_tree_ptr = new TTree("events", "Event data");
+
+    Long_t _trigID;
+    std::vector<Double_t> _timestamps;
+    std::vector<Short_t> _HG_charges; 
+    std::vector<Short_t> _LG_charges;
+
+    _tree_ptr->Branch("trigID", &_trigID);
+    _tree_ptr->Branch("timestamps", &_timestamps);
+    _tree_ptr->Branch("HG_charges", &_HG_charges);
+    _tree_ptr->Branch("LG_charges", &_LG_charges);
+
+    for (auto i = 0; i<_event_array_size; i++){
+        if (!event_valid_array_ptr->at(i))
+            continue;
+        _trigID     = event_array_ptr->at(i).trigID;
+        _timestamps = event_array_ptr->at(i).timestamps;
+        _HG_charges = event_array_ptr->at(i).HG_charges;
+        _LG_charges = event_array_ptr->at(i).LG_charges;
+        _tree_ptr->Fill();
+    }
+
+    _tree_ptr->Write();
+    _root_file_ptr->Close();
+
+    LOG(INFO) << "Events written to root file";
+    return true;
+}
+
+bool CAEN_event_builder::read_root_file2event_array(const char *_root_file_name) {
+    event_array_ptr->clear();
+    event_array_ptr->resize(0);
+    event_valid_array_ptr->clear();
+    event_valid_array_ptr->resize(0);
+
+    if (strlen(_root_file_name) == 0) {
+        LOG(ERROR) << "Root file name is empty!";
+        return false;
+    }
+
+    TFile *_root_file_ptr = new TFile(_root_file_name, "READ");
+    if (_root_file_ptr->IsZombie()) {
+        LOG(ERROR) << "Root event file cannot be opened!";
+        return false;
+    }
+
+    TTree *_tree_ptr = (TTree*)_root_file_ptr->Get("events");
+
+    Long_t _trigID;
+    std::vector<Double_t> *_timestamps_ptr = nullptr;
+    std::vector<Short_t> *_HG_charges_ptr  = nullptr;
+    std::vector<Short_t> *_LG_charges_ptr  = nullptr;
+
+    _tree_ptr->SetBranchAddress("trigID", &_trigID);
+    _tree_ptr->SetBranchAddress("timestamps", &_timestamps_ptr);
+    _tree_ptr->SetBranchAddress("HG_charges", &_HG_charges_ptr);
+    _tree_ptr->SetBranchAddress("LG_charges", &_LG_charges_ptr);
+
+    auto _event_num = _tree_ptr->GetEntries();
+    LOG(INFO) << "Number of events in root file: " << _event_num;
+
+    for (auto i = 0; i<_event_num; i++){
+        _tree_ptr->GetEntry(i);
+        EventInfo _tmp_event;
+        _tmp_event.trigID = _trigID;
+        _tmp_event.timestamps = *_timestamps_ptr;
+        _tmp_event.HG_charges = *_HG_charges_ptr;
+        _tmp_event.LG_charges = *_LG_charges_ptr;
+        event_array_ptr->push_back(_tmp_event);
+        event_valid_array_ptr->push_back(true);
+    }
+
+    _root_file_ptr->Close();
+
+    auto _event_array_size = event_array_ptr->size();
+    LOG(INFO) << "Number of events in event array: " << _event_array_size;
+
+    if (_event_array_size != _event_num){
+        LOG(ERROR) << "Number of events in root file and event array are not equal!";
+        return false;
+    }
+
+    return true;
+}

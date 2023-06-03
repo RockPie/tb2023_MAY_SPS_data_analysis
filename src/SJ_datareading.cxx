@@ -369,12 +369,12 @@ bool CAEN_data_reader::write_frame_array2root_file(const char *_root_file_name, 
     // ! create branches
     _tree_ptr->Branch("board_num", &_board_num);
     _tree_ptr->Branch("timestamp", &_timestamp);
-    _tree_ptr->Branch("trigID", &_trigID);
-    _tree_ptr->Branch("CH", &_CH);
+    _tree_ptr->Branch("trigID",    &_trigID);
+    _tree_ptr->Branch("CH",        &_CH);
     _tree_ptr->Branch("HG_charge", &_HG_charge);
     _tree_ptr->Branch("LG_charge", &_LG_charge);
-    _tree_ptr->Branch("TS", &_TS);
-    _tree_ptr->Branch("ToT", &_ToT);
+    _tree_ptr->Branch("TS",        &_TS);
+    _tree_ptr->Branch("ToT",       &_ToT);
 
     for (const auto& _frame: *_frame_info_array_ptr){
         _board_num  = _frame.nboards;
@@ -399,7 +399,7 @@ bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
     reset_frame_vector();
     TFile *_root_file_ptr = new TFile(_root_file_name, "READ");
     if (_root_file_ptr->IsZombie()) {
-        LOG(ERROR) << "Root file cannot be opened!";
+        LOG(ERROR) << "Root frame file cannot be opened!";
         return false;
     }
 
@@ -416,15 +416,15 @@ bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
 
     _tree_ptr->SetBranchAddress("board_num", &_board_num);
     _tree_ptr->SetBranchAddress("timestamp", &_timestamp);
-    _tree_ptr->SetBranchAddress("trigID", &_trigID);
-    _tree_ptr->SetBranchAddress("CH", &_CH_ptr);
+    _tree_ptr->SetBranchAddress("trigID",    &_trigID);
+    _tree_ptr->SetBranchAddress("CH",        &_CH_ptr);
     _tree_ptr->SetBranchAddress("HG_charge", &_HG_charge_ptr);
     _tree_ptr->SetBranchAddress("LG_charge", &_LG_charge_ptr);
-    _tree_ptr->SetBranchAddress("TS", &_TS_ptr);
-    _tree_ptr->SetBranchAddress("ToT", &_ToT_ptr);
+    _tree_ptr->SetBranchAddress("TS",        &_TS_ptr);
+    _tree_ptr->SetBranchAddress("ToT",       &_ToT_ptr);
 
     auto _n_entries = _tree_ptr->GetEntries();
-    LOG(INFO) << "Number of entries: " << _n_entries;
+    LOG(INFO) << "Number of frames: " << _n_entries;
 
     for (auto i = 0; i < _n_entries; i++){
         _tree_ptr->GetEntry(i);
@@ -439,6 +439,8 @@ bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
         _frame_info.ToT         = *_ToT_ptr;
         this->frame_info_array->push_back(_frame_info);
     }
+
+    _root_file_ptr->Close();
 
     auto _frame_info_array_size = this->frame_info_array->size();
     LOG(INFO) << "Frame info array size: " << _frame_info_array_size;
