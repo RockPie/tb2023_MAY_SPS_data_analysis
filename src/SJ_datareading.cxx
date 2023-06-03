@@ -1,20 +1,16 @@
-#include "../include/SJ_datareading.h"
+#include "SJ_datareading.h"
 
 CAEN_data_reader::CAEN_data_reader():
     flag_caen_file_valid(false),
     flag_caen_file_opened(false),
-    flag_frame_info_array_valid(false),
-    decode_board_number(DEFAULT_BOARD_NUMBER),
-    decode_channel_number(DEFAULT_CHANNEL_NUMBER){
+    flag_frame_info_array_valid(false){
     LOG(INFO) << "CAEN reader created without file name";
 }
 
 CAEN_data_reader::CAEN_data_reader(const char *_file_name):
     flag_caen_file_valid(false),
     flag_caen_file_opened(false),
-    flag_frame_info_array_valid(false),
-    decode_board_number(DEFAULT_BOARD_NUMBER),
-    decode_channel_number(DEFAULT_CHANNEL_NUMBER){
+    flag_frame_info_array_valid(false){
     // Check if the file name is empty.
     if (strlen(_file_name) == 0){
         LOG(ERROR) << "File name is empty!";

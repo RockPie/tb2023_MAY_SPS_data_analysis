@@ -5,6 +5,9 @@ project(sketchprj1)
 find_package(ROOT REQUIRED COMPONENTS 
     Core 
     Tree
+    Hist
+    Gpad
+
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -12,10 +15,15 @@ add_library(sketchprj1 SHARED
     src/SJ_datareading.cxx
     src/SJ_eventbuilder.cxx
     src/easylogging++.cc
+    include/csv.h
 )
 target_link_libraries(sketchprj1 PUBLIC 
     ROOT::Core 
     ROOT::Tree
+    ROOT::Hist
+    # for TCanvas
+    ROOT::Gpad
+    # for TGraph
 )
 
 add_executable(Main Sketch1.cxx)

@@ -5,13 +5,11 @@
 // * Created: 01-06-2023
 // ***********************************************************
 
-#ifndef SJ_DATAREADING_H
-#define SJ_DATAREADING_H
+#pragma once
 
 #define CAEN_FILE_HEADER_LINE_NUM    6
 #define INVALID_RUN_NUMBER          -1
 #define INVALID_CHN_VALUE           -1
-#define DEFAULT_BOARD_NUMBER         4
 #define DEFAULT_CHANNEL_NUMBER       64
 #define INFINITE_FRAMES             -1
 #define DEFAULT_ROOT_FILE_FOLDER     "../cachedFiles/"
@@ -25,12 +23,12 @@
 #include <TTree.h>      // for creating root tree
 #include "easylogging++.h"  // for logging
 
-INITIALIZE_EASYLOGGINGPP
+
 
 class CAEN_data_reader {
 public:
     struct FrameInfo {
-        Short_t    nboards;   // 2-byte int
+        Short_t   nboards;    // 2-byte int
         Double_t  timestamp;  // 8-byte float
         Long_t    trigID;     // 8-byte int
         std::vector<Short_t> CH;   // 2-byte int
@@ -148,12 +146,8 @@ private:
     std::fstream *caen_file_ptr;
     std::vector<FrameInfo> *frame_info_array;
     Int_t run_number = INVALID_RUN_NUMBER;
-    Int_t decode_board_number;
-    Int_t decode_channel_number;
     ULong64_t total_line_num = 0;
     bool  flag_caen_file_opened;
     bool  flag_caen_file_valid;
     bool  flag_frame_info_array_valid;
 };
-
-#endif // SJ_DATAREADING_H

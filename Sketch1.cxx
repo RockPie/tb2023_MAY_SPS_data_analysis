@@ -1,5 +1,9 @@
 #include "easylogging++.h"
 #include "SJ_datareading.h"
+#include "SJ_eventbuilder.h"
+
+#include <TH1.h>
+#include <TCanvas.h>
 
 void set_easylogger(); // set easylogging++ configurations
 
@@ -16,9 +20,23 @@ int main(int argc, char* argv[]){
     // reader->write_frame_array2root_file();
     // delete reader;
 
-    CAEN_data_reader *reader = new CAEN_data_reader();
+    CAEN_data_reader    *reader  = new CAEN_data_reader();
+    CAEN_event_builder  *builder = new CAEN_event_builder();
     reader->read_root_file2frame_array("../cachedFiles/Run_2819.root");
+    builder->reconstruct_event(reader->get_frame_info_array_ptr(), 50000);
+    auto adc_sum = builder->get_event_sum_array();
+    TH1D* h1 = new TH1D("hist", "Histogram", 1000, 5000, 20000);
+    for (const auto& i : adc_sum){
+        h1->Fill(i);
+        // LOG(INFO) << i;
+    }
+
+    TCanvas* c1 = new TCanvas("c1", "c1", 800, 600);
+    h1->Draw();
+    c1->SaveAs("hist.png");
+
     LOG(INFO) << "Finished";
+    delete builder;
     delete reader;
     return 0;
 }
