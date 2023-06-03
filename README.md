@@ -38,3 +38,24 @@ builder->write_event_array2root_file("path_to_root_events_file.root");
 delete builder;
 delete reader;
 ```
+
+### c. Read a mapping file 
+
+```cpp
+std::vector<std::vector<Short_t>> mapping = SJUtil::read_mapping_csv_file("path_to_mapping.csv");
+
+auto Mapping_Board_Num_Array    = mapping[0];
+auto Mapping_Channel_Num_Array  = mapping[1];
+auto Mapping_Module_Num_Array   = mapping[2];
+auto Mapping_Col_Array          = mapping[3];
+auto Mapping_Row_Array          = mapping[4];
+
+auto array_length = Mapping_Board_Num_Array.size();
+for (auto i = 0; i < array_length; i++){
+    LOG(INFO)   << Mapping_Board_Num_Array[i]   << " " 
+                << Mapping_Channel_Num_Array[i] << " " 
+                << Mapping_Module_Num_Array[i]  << " " 
+                << Mapping_Col_Array[i]         << " " 
+                << Mapping_Row_Array[i];
+}
+```

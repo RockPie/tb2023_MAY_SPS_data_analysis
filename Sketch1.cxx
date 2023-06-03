@@ -1,6 +1,7 @@
 #include "easylogging++.h"
 #include "SJ_datareading.h"
 #include "SJ_eventbuilder.h"
+#include "SJ_utilities.h"
 
 #include <TH1.h>
 #include <TCanvas.h>
@@ -8,41 +9,33 @@
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
-    // --------------------- Initialize easylogging++ -----------------------
     START_EASYLOGGINGPP(argc, argv);
-    set_easylogger();
-    // ---------------------------------------------------------------------
-    // CAEN_data_reader *reader = new CAEN_data_reader("../dataFiles/Run2819_list.txt");
-    // reader->print_caen_file_header();
-    // reader->extract_frame_info_array(INFINITE_FRAMES, true);
-    // std::vector<CAEN_data_reader::FrameInfo> * array_ptr = reader->get_frame_info_array_ptr();
-    // LOG(INFO) << "Finished";
-    // reader->write_frame_array2root_file();
-    // delete reader;
+    set_easylogger();   // * set easylogging++ configurations
 
-    CAEN_data_reader    *reader  = new CAEN_data_reader();
-    CAEN_event_builder  *builder = new CAEN_event_builder();
-    reader->read_root_file2frame_array("../cachedFiles/Run_2806.root");
-    builder->reconstruct_event(
-        reader->get_frame_info_array_ptr(), 
-        INFINITE_FRAMES
-    );
-    auto adc_sum = builder->get_event_sum_array();
-    TH1D* h1 = new TH1D("hist", "Histogram", 1000, 5000, 20000);
-    for (const auto& i : adc_sum){
-        h1->Fill(i);
-        // LOG(INFO) << i;
-    }
+    // * Read mapping csv file
+    std::vector<std::vector<Short_t>> mapping = SJUtil::read_mapping_csv_file("../Mapping_tb2023SPS.csv");
 
-    TCanvas* c1 = new TCanvas("c1", "c1", 800, 600);
-    h1->Draw();
-    c1->SaveAs("hist.png");
+    auto Mapping_Board_Num_Array    = mapping[0];
+    auto Mapping_Channel_Num_Array  = mapping[1];
+    auto Mapping_Module_Num_Array   = mapping[2];
+    auto Mapping_Col_Array          = mapping[3];
+    auto Mapping_Row_Array          = mapping[4];
 
-    builder->write_event_array2root_file("../cachedFiles/Run_2806_events.root");
-
+    // CAEN_event_builder  *builder = new CAEN_event_builder();
+    //builder->read_root_file2event_array("../cachedFiles///Run_2806_events.root");
+    //auto adc_sum = builder->get_event_sum_array();
+    //TH1D* h1 = new TH1D("hist", "Histogram", 1000, 5000, 20000);
+    //for (const auto& i : adc_sum){
+    //    h1->Fill(i);
+    //    // LOG(INFO) << i;
+    //}
+//
+    //TCanvas* c1 = new TCanvas("c1", "c1", 800, 600);
+    //h1->Draw();
+    //c1->SaveAs("hist.png");
+    
+    //delete builder;
     LOG(INFO) << "Finished";
-    delete builder;
-    delete reader;
     return 0;
 }
 

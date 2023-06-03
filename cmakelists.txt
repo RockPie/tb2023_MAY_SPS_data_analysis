@@ -15,6 +15,7 @@ add_library(sketchprj1 SHARED
     src/SJ_datareading.cxx
     src/SJ_eventbuilder.cxx
     src/easylogging++.cc
+    src/SJ_utilities.cxx
     include/csv.h
 )
 target_link_libraries(sketchprj1 PUBLIC 
