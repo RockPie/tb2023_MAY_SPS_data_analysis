@@ -13,13 +13,17 @@ int main(int argc, char* argv[]){
     set_easylogger();   // * set easylogging++ configurations
 
     // * Read mapping csv file
-    std::vector<std::vector<Short_t>> mapping = SJUtil::read_mapping_csv_file("../Mapping_tb2023SPS.csv");
+    auto mapping = SJUtil::read_mapping_csv_file("../Mapping_tb2023SPS.csv");
+    auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
 
-    auto Mapping_Board_Num_Array    = mapping[0];
-    auto Mapping_Channel_Num_Array  = mapping[1];
-    auto Mapping_Module_Num_Array   = mapping[2];
-    auto Mapping_Col_Array          = mapping[3];
-    auto Mapping_Row_Array          = mapping[4];
+    auto uni_chn = mapping_coords[0];
+    auto x_coord = mapping_coords[1];
+    auto y_coord = mapping_coords[2];
+
+    auto chn_num = uni_chn.size();
+    for (int i = 0; i < chn_num; ++i){
+        LOG(INFO) << uni_chn[i] << " " << x_coord[i] << " " << y_coord[i];
+    }
 
     // CAEN_event_builder  *builder = new CAEN_event_builder();
     //builder->read_root_file2event_array("../cachedFiles///Run_2806_events.root");
