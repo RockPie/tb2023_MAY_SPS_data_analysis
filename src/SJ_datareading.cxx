@@ -173,7 +173,7 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
 
 std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(bool &_flag_end, bool _get_chn_val){
     FrameInfo _frame_info;
-    if (!flag_caen_file_opened) {
+    if (!flag_caen_file_opened){
         LOG(ERROR) << "CAEN file is not opened!";
         return std::nullopt;
     }
@@ -244,17 +244,17 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
                 Short_t _LG_charge  = INVALID_CHN_VALUE;
                 Short_t _TS         = INVALID_CHN_VALUE;
                 Short_t _ToT        = INVALID_CHN_VALUE;
-                _iss >> _CH >> _HG_charge >> _LG_charge >> _TS >> _ToT;
+                _iss >> _CH >> _LG_charge >> _HG_charge >> _TS >> _ToT;
                 _frame_info.CH.push_back(_CH);
-                _frame_info.HG_charge.push_back(_HG_charge);
                 _frame_info.LG_charge.push_back(_LG_charge);
+                _frame_info.HG_charge.push_back(_HG_charge);
                 _frame_info.TS.push_back(_TS);
                 _frame_info.ToT.push_back(_ToT);
             }
             else {
                 _frame_info.CH.push_back(INVALID_CHN_VALUE);
-                _frame_info.HG_charge.push_back(INVALID_CHN_VALUE);
                 _frame_info.LG_charge.push_back(INVALID_CHN_VALUE);
+                _frame_info.HG_charge.push_back(INVALID_CHN_VALUE);
                 _frame_info.TS.push_back(INVALID_CHN_VALUE);
                 _frame_info.ToT.push_back(INVALID_CHN_VALUE);
             }
@@ -279,10 +279,11 @@ std::optional<CAEN_data_reader::FrameInfo> CAEN_data_reader::extract_frame_info(
 }
 
 bool CAEN_data_reader::extract_frame_info_array(long _n_frames, bool _get_chn_val){
-    if (!flag_caen_file_opened) {
-        LOG(ERROR) << "CAEN file is not opened!";
-        return false;
-    }
+    if (!flag_caen_file_opened)
+        if (!this->create_file_ptr()){
+            LOG(ERROR) << "CAEN file cannot be opened!";
+            return false;
+        }
     // ! this check is not precise
     auto _frame_requested_too_large = _n_frames * DEFAULT_CHANNEL_NUMBER >= this->total_line_num 
                                    && this->total_line_num != 0

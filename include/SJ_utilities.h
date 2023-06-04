@@ -8,14 +8,43 @@
 #pragma once
 
 #define INVALID_2D_VALUE            -1
+// #define ENABLE_WARNING
+
+#define DEFAULT_PREFIX_TXT          "Run"
+#define DEFAULT_EXTENSION_TXT       ".txt"
+#define DEFAULT_PREFIX_ROOT         "Run_"
+#define DEFAULT_EXTENSION_ROOT      ".root"
 
 #include <vector>           // for std::vector
+#include <string>           // for std::string
 #include <TTree.h>          // for root tree
 #include "easylogging++.h"  // for logging
 #include "csv.h"            // for csv file reading
 
 
 namespace SJUtil{
+
+    // * Create a file name 
+    // * Param: _folder_path: folder path
+    // *        _prefix: file name prefix
+    // *        _run_num: run number
+    // *        _suffix: file name suffix
+    // *        _type: file type
+    // * Return: a char pointer to the file name
+    char* create_filename(const char* _folder_path,  const char* _prefix, int _run_num, const char* _suffix, const char* _type);
+    inline char* create_filename_CAEN(const char* _folder_path, int _run_num){
+        return create_filename(_folder_path, DEFAULT_PREFIX_TXT, _run_num, "_list", DEFAULT_EXTENSION_TXT);
+    }
+    inline char* create_filename_frames(const char* _folder_path, int _run_num) {
+        return create_filename(_folder_path, DEFAULT_PREFIX_ROOT, _run_num, "_frames", DEFAULT_EXTENSION_ROOT);
+    }
+    inline char* create_filename_events(const char* _folder_path, int _run_num){
+        return create_filename(_folder_path, DEFAULT_PREFIX_ROOT, _run_num, "_events", DEFAULT_EXTENSION_ROOT);
+    }
+    inline char* create_filename_results(const char* _folder_path, int _run_num){
+        return create_filename(_folder_path, DEFAULT_PREFIX_ROOT, _run_num, "_results", DEFAULT_EXTENSION_ROOT);
+    }
+
     // * Read mapping csv file
     // * Param: _file_name: csv file name
     // * Return: a vector of vectors, each vector contains a column of the csv file

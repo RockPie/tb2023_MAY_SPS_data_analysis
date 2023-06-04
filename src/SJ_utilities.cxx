@@ -1,5 +1,11 @@
 #include "SJ_utilities.h"
 
+char* SJUtil::create_filename(const char* _folder_path,  const char* _prefix, int _run_num, const char* _suffix, const char* _type){
+    char* _file_name = new char[100];
+    snprintf(_file_name, 100, "%s/%s%d%s%s", _folder_path, _prefix, _run_num, _suffix, _type);
+    return _file_name;
+}
+
 std::vector<std::vector<Short_t>> SJUtil::read_mapping_csv_file(const char* _file_name) {
     LOG(INFO) << "Reading mapping file: " << _file_name;
     if (!std::filesystem::exists(_file_name)) {
@@ -137,8 +143,9 @@ std::vector<std::vector<Short_t>> SJUtil::map1d_to_2d(const std::vector<Short_t>
 std::vector<std::vector<Short_t>> SJUtil::map1d_to_2d(const std::vector<Short_t> &_1d_values, const std::vector<Short_t> &_mapping_uni_chn, const std::vector<Short_t> &_mapping_x_coord, const std::vector<Short_t> &_mapping_y_coord){
     auto _length_values = _1d_values.size();
     auto _length_mapping = _mapping_uni_chn.size();
-    LOG_IF(_length_values != _length_mapping, WARNING) << "Mapping array size not match: " << _length_values << " vs " << _length_mapping;
-
+    #ifdef ENABLE_WARNING
+        LOG_IF(_length_values != _length_mapping, WARNING) << "Mapping array size not match: " << _length_values << " vs " << _length_mapping;
+    #endif
     std::vector<Short_t> _x_coord_array;
     std::vector<Short_t> _y_coord_array;
     std::vector<Short_t> _z_coord_array;
@@ -153,7 +160,9 @@ std::vector<std::vector<Short_t>> SJUtil::map1d_to_2d(const std::vector<Short_t>
             _z_coord_array.push_back(_1d_values[i]);
         }
         else {
-            LOG(WARNING) << "Cannot find channel: " << i;
+            #ifdef ENABLE_WARNING
+                LOG(WARNING) << "Cannot find channel: " << i;
+            #endif
             _x_coord_array.push_back(INVALID_2D_VALUE);
             _y_coord_array.push_back(INVALID_2D_VALUE);
             _z_coord_array.push_back(INVALID_2D_VALUE);
