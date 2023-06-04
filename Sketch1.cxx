@@ -5,6 +5,7 @@
 
 #include <TH1.h>
 #include <TCanvas.h>
+#include <TGraph2D.h>
 
 void set_easylogger(); // set easylogging++ configurations
 
@@ -16,29 +17,44 @@ int main(int argc, char* argv[]){
     auto mapping = SJUtil::read_mapping_csv_file("../Mapping_tb2023SPS.csv");
     auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
 
-    auto uni_chn = mapping_coords[0];
-    auto x_coord = mapping_coords[1];
-    auto y_coord = mapping_coords[2];
+    auto builder = new CAEN_event_builder();
+    builder->read_root_file2event_array("../cachedFiles/Run_2806_events.root");
 
-    auto chn_num = uni_chn.size();
-    for (int i = 0; i < chn_num; ++i){
-        LOG(INFO) << uni_chn[i] << " " << x_coord[i] << " " << y_coord[i];
+    auto eventArrayPtr = builder->get_event_array_ptr();
+    auto eventValidPtr = builder->get_event_valid_array_ptr();
+
+    // auto eventNum = eventValidPtr->size();
+    auto eventNum = 1;
+
+    for (auto i = 0; i < eventNum; i++){
+        if (!eventValidPtr->at(i)) continue;
+        auto HG_charges = eventArrayPtr->at(i).HG_charges;
+        auto twoD_values = SJUtil::map1d_to_2d(HG_charges, mapping_coords);
+        TCanvas *c1 = new TCanvas("c1", "3D scatter", 2500, 2000);
+        TGraph2D *gr = new TGraph2D();
+        gr->SetMarkerStyle(20);
+        gr->SetMarkerSize(5);
+        gr->SetMarkerColor(kRed);
+
+        for (auto j = 0; j < twoD_values[0].size(); j++){
+            if (twoD_values[2][j] == INVALID_2D_VALUE) continue;
+            gr->SetPoint(j, twoD_values[0][j], twoD_values[1][j], twoD_values[2][j]);
+            LOG(DEBUG) << "x: " << twoD_values[0][j] << ", y: " << twoD_values[1][j] << ", z: " << twoD_values[2][j];
+        }
+
+        gr->GetXaxis()->SetRangeUser(0, 105);
+        gr->GetYaxis()->SetRangeUser(0, 105);
+        gr->GetZaxis()->SetRangeUser(0, 1000);
+
+        gr->Draw("pcol");
+        c1->Update();
+        c1->WaitPrimitive();
+        c1->SaveAs("test.png");
+        delete c1;
+        delete gr;
     }
-
-    // CAEN_event_builder  *builder = new CAEN_event_builder();
-    //builder->read_root_file2event_array("../cachedFiles///Run_2806_events.root");
-    //auto adc_sum = builder->get_event_sum_array();
-    //TH1D* h1 = new TH1D("hist", "Histogram", 1000, 5000, 20000);
-    //for (const auto& i : adc_sum){
-    //    h1->Fill(i);
-    //    // LOG(INFO) << i;
-    //}
-//
-    //TCanvas* c1 = new TCanvas("c1", "c1", 800, 600);
-    //h1->Draw();
-    //c1->SaveAs("hist.png");
     
-    //delete builder;
+    delete builder;
     LOG(INFO) << "Finished";
     return 0;
 }

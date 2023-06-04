@@ -48,6 +48,10 @@ public:
     bool write_event_array2root_file(const char *_root_file_name);
     bool read_root_file2event_array(const char *_root_file_name);
 
+    inline std::vector<EventInfo> *get_event_array_ptr(){return event_array_ptr;}
+
+    inline std::vector<bool> *get_event_valid_array_ptr(){return event_valid_array_ptr;}
+
 private:
     std::vector<EventInfo> *event_array_ptr;
     std::vector<bool> *event_valid_array_ptr;

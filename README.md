@@ -42,20 +42,22 @@ delete reader;
 ### c. Read a mapping file 
 
 ```cpp
-std::vector<std::vector<Short_t>> mapping = SJUtil::read_mapping_csv_file("path_to_mapping.csv");
+auto mapping = SJUtil::read_mapping_csv_file("path_to_mapping.csv");
 
 auto Mapping_Board_Num_Array    = mapping[0];
 auto Mapping_Channel_Num_Array  = mapping[1];
 auto Mapping_Module_Num_Array   = mapping[2];
 auto Mapping_Col_Array          = mapping[3];
 auto Mapping_Row_Array          = mapping[4];
+```
 
-auto array_length = Mapping_Board_Num_Array.size();
-for (auto i = 0; i < array_length; i++){
-    LOG(INFO)   << Mapping_Board_Num_Array[i]   << " " 
-                << Mapping_Channel_Num_Array[i] << " " 
-                << Mapping_Module_Num_Array[i]  << " " 
-                << Mapping_Col_Array[i]         << " " 
-                << Mapping_Row_Array[i];
-}
+### d. Read a mapping file and generate x,y coordinates
+
+```cpp
+auto mapping = SJUtil::read_mapping_csv_file("path_to_mapping.csv");
+auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
+
+auto uni_chn = mapping_coords[0];
+auto x_coord = mapping_coords[1];
+auto y_coord = mapping_coords[2];
 ```
