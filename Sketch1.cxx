@@ -7,54 +7,29 @@
 #include <TCanvas.h>
 #include <TGraph2D.h>
 
+// TODO: why there is a (0,0) point in 3-D scatter plot?
+// TODO: swap HG and LG charge data in root files
+
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
 
-    // * Read mapping csv file
-    auto mapping = SJUtil::read_mapping_csv_file("../Mapping_tb2023SPS.csv");
-    auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
+    int run_number = 2806;
+    // * File path
+    auto file_CAEN_path          = SJUtil::create_filename_CAEN(
+            "../dataFiles",    run_number);
+    auto file_root_frames_path   = SJUtil::create_filename_frames(
+            "../cachedFiles",  run_number);
+    auto file_root_events_path   = SJUtil::create_filename_events(
+            "../cachedFiles",  run_number);
+    auto file_mapping_path       = "../Mapping_tb2023SPS.csv";
+    auto file_root_results_path  = SJUtil::create_filename_results(
+            "../cachedFiles",  run_number);
 
-    auto builder = new CAEN_event_builder();
-    builder->read_root_file2event_array("../cachedFiles/Run_2806_events.root");
-
-    auto eventArrayPtr = builder->get_event_array_ptr();
-    auto eventValidPtr = builder->get_event_valid_array_ptr();
-
-    // auto eventNum = eventValidPtr->size();
-    auto eventNum = 1;
-
-    for (auto i = 0; i < eventNum; i++){
-        if (!eventValidPtr->at(i)) continue;
-        auto HG_charges = eventArrayPtr->at(i).HG_charges;
-        auto twoD_values = SJUtil::map1d_to_2d(HG_charges, mapping_coords);
-        TCanvas *c1 = new TCanvas("c1", "3D scatter", 2500, 2000);
-        TGraph2D *gr = new TGraph2D();
-        gr->SetMarkerStyle(20);
-        gr->SetMarkerSize(5);
-        gr->SetMarkerColor(kRed);
-
-        for (auto j = 0; j < twoD_values[0].size(); j++){
-            if (twoD_values[2][j] == INVALID_2D_VALUE) continue;
-            gr->SetPoint(j, twoD_values[0][j], twoD_values[1][j], twoD_values[2][j]);
-            LOG(DEBUG) << "x: " << twoD_values[0][j] << ", y: " << twoD_values[1][j] << ", z: " << twoD_values[2][j];
-        }
-
-        gr->GetXaxis()->SetRangeUser(0, 105);
-        gr->GetYaxis()->SetRangeUser(0, 105);
-        gr->GetZaxis()->SetRangeUser(0, 1000);
-
-        gr->Draw("pcol");
-        c1->Update();
-        c1->WaitPrimitive();
-        c1->SaveAs("test.png");
-        delete c1;
-        delete gr;
-    }
+    // * Main program
     
-    delete builder;
     LOG(INFO) << "Finished";
     return 0;
 }
