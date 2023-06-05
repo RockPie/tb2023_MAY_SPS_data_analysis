@@ -21,8 +21,6 @@
 #include "SJ_datareading.h"
 #include "easylogging++.h"  // for logging
 
-INITIALIZE_EASYLOGGINGPP
-
 class CAEN_event_builder{
 public:
     struct EventInfo{

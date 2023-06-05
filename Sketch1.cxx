@@ -1,14 +1,6 @@
-#include "easylogging++.h"
-#include "SJ_datareading.h"
-#include "SJ_eventbuilder.h"
-#include "SJ_utilities.h"
-
-#include <TH1.h>
-#include <TCanvas.h>
-#include <TGraph2D.h>
+#include "SJ_includes.h"
 
 // TODO: why there is a (0,0) point in 3-D scatter plot?
-// TODO: swap HG and LG charge data in root files
 
 void set_easylogger(); // set easylogging++ configurations
 
@@ -29,7 +21,58 @@ int main(int argc, char* argv[]){
             "../cachedFiles",  run_number);
 
     // * Main program
-    
+    auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
+    auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
+
+    auto builder = new CAEN_event_builder();
+    builder->read_root_file2event_array(file_root_events_path);
+
+    auto eventArrayPtr  = builder->get_event_array_ptr();
+    auto eventValidPtr  = builder->get_event_valid_array_ptr();
+    auto eventNum       = int(eventValidPtr->size() / 100);
+
+    TFile *f = new TFile(file_root_results_path, "RECREATE");
+
+    // * Get HGain data
+    std::vector<std::vector<Short_t>> HGain_data;
+    for (int i = 0; i < eventNum; i++)
+        if (eventValidPtr->at(i))
+            HGain_data.push_back(eventArrayPtr->at(i).HG_charges);
+
+    // * Generate 2-D distribution
+    auto Canvas_Ptr = new TCanvas("Canvas", "Canvas", 800, 600);
+    auto hist2D = SJPlot::distribution_2d(HGain_data, "hgain", "HGain_2D");
+    hist2D->Draw("colz");
+    gStyle->SetPalette(103);
+
+    // * add dashed lines
+    // * from (35,0) to (35, 105)
+    auto line1 = new TLine(35, 0, 35, 105);
+    line1->SetLineColor(kWhite);
+    line1->SetLineStyle(2);
+    line1->Draw();
+    // * from (0, 35) to (105, 35)
+    auto line2 = new TLine(0, 35, 105, 35);
+    line2->SetLineColor(kWhite);
+    line2->SetLineStyle(2);
+    line2->Draw();
+    // * from (0, 70) to (105, 70)
+    auto line3 = new TLine(0, 70, 105, 70);
+    line3->SetLineColor(kWhite);
+    line3->SetLineStyle(2);
+    line3->Draw();
+    // * from (70, 0) to (70, 105)
+    auto line4 = new TLine(70, 0, 70, 105);
+    line4->SetLineColor(kWhite);
+    line4->SetLineStyle(2);
+    line4->Draw();
+
+    Canvas_Ptr->Write();
+
+    f->Close();
+    // delete hist2D;
+    // delete Canvas_Ptr;
+    // delete builder;
     LOG(INFO) << "Finished";
     return 0;
 }

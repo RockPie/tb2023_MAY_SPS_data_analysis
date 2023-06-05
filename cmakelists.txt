@@ -7,7 +7,7 @@ find_package(ROOT REQUIRED COMPONENTS
     Tree
     Hist
     Gpad
-
+    Graf3d
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -16,7 +16,9 @@ add_library(sketchprj1 SHARED
     src/SJ_eventbuilder.cxx
     src/easylogging++.cc
     src/SJ_utilities.cxx
+    src/SJ_plotting.cxx
     include/csv.h
+    include/SJ_includes.h
 )
 target_link_libraries(sketchprj1 PUBLIC 
     ROOT::Core 
@@ -24,7 +26,7 @@ target_link_libraries(sketchprj1 PUBLIC
     ROOT::Hist
     # for TCanvas
     ROOT::Gpad
-    # for TGraph
+    ROOT::Graf3d
 )
 
 add_executable(Main Sketch1.cxx)

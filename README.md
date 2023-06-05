@@ -85,44 +85,26 @@ D --"SJUtil::map1d_to_2d"--> E
 ```cpp
 auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
 auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
-
 auto builder = new CAEN_event_builder();
 builder->read_root_file2event_array(file_root_events_path);
 
 auto eventArrayPtr  = builder->get_event_array_ptr();
 auto eventValidPtr  = builder->get_event_valid_array_ptr();
 auto eventNum       = int(eventValidPtr->size() / 100);
-
 TFile *f = new TFile(file_root_results_path, "RECREATE");
 
 for (auto i = 0; i < eventNum; i++){
     if (!eventValidPtr->at(i)) continue;
-    auto HG_charges     = eventArrayPtr->at(i).HG_charges;
-    auto twoD_values    = SJUtil::map1d_to_2d(HG_charges, mapping_coords);
-
-    char *name = new char[20];
-    snprintf(name, 20, "event_%d", i);
-    TCanvas *c1 = new TCanvas(name, "3D scatter", 2500, 2000);
-    TGraph2D *gr = new TGraph2D();
-
-    gr->SetMarkerStyle(20);
-    gr->SetMarkerSize(2);
-    gr->SetMarkerColor(kRed);
-
-    for (auto j = 0; j < twoD_values[0].size(); j++){
-        if (twoD_values[2][j] == INVALID_2D_VALUE) continue;
-        gr->SetPoint(j, twoD_values[0][j], twoD_values[1][j], twoD_value[2][j]);
-    }
-
-    gr->GetXaxis()->SetRangeUser(0, 105);
-    gr->GetYaxis()->SetRangeUser(0, 105);
-    gr->GetZaxis()->SetRangeUser(0, 1000);
-    gr->Draw("pcol");
-    c1->Update();
-    c1->WaitPrimitive();
-    c1->Write();
-    delete c1;
-    delete gr;
+    auto HG_charges     = eventArrayPtr->at(i).LG_charges;
+    auto _currentName   = Form("event_%d", i);
+    auto _currentTitle  = Form("Event %d", i);
+    auto Canvas_Ptr     = new TCanvas(_currentName, _currentTitle, 200,10, 700, 500);
+    auto Graph_Ptr      = SJPlot::scatter_3d(HG_charges, mapping_coords,_currentName, _currentTitle);
+    Canvas_Ptr->Update();
+    Canvas_Ptr->WaitPrimitive();
+    Canvas_Ptr->Write();
+    delete Graph_Ptr;
+    delete Canvas_Ptr;
 }
 f->Close();
 delete builder;
