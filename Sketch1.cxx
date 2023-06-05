@@ -45,34 +45,26 @@ int main(int argc, char* argv[]){
     hist2D->Draw("colz");
     gStyle->SetPalette(103);
 
-    // * add dashed lines
-    // * from (35,0) to (35, 105)
-    auto line1 = new TLine(35, 0, 35, 105);
-    line1->SetLineColor(kWhite);
-    line1->SetLineStyle(2);
-    line1->Draw();
-    // * from (0, 35) to (105, 35)
-    auto line2 = new TLine(0, 35, 105, 35);
-    line2->SetLineColor(kWhite);
-    line2->SetLineStyle(2);
-    line2->Draw();
-    // * from (0, 70) to (105, 70)
-    auto line3 = new TLine(0, 70, 105, 70);
-    line3->SetLineColor(kWhite);
-    line3->SetLineStyle(2);
-    line3->Draw();
-    // * from (70, 0) to (70, 105)
-    auto line4 = new TLine(70, 0, 70, 105);
-    line4->SetLineColor(kWhite);
-    line4->SetLineStyle(2);
-    line4->Draw();
+    std::vector<TLine*> LinePtrArray;
+
+    LinePtrArray.push_back(
+        SJPlot::add_horizontal_line(35, 0, 105, kWhite, 2, 1));
+    LinePtrArray.push_back(
+        SJPlot::add_horizontal_line(70, 0, 105, kWhite, 2, 1));
+    LinePtrArray.push_back(
+        SJPlot::add_vertical_line(35, 0, 105, kWhite, 2, 1));
+    LinePtrArray.push_back(
+        SJPlot::add_vertical_line(70, 0, 105, kWhite, 2, 1));
 
     Canvas_Ptr->Write();
 
     f->Close();
-    // delete hist2D;
-    // delete Canvas_Ptr;
-    // delete builder;
+
+    for (auto i=0; i<4; i++)
+        delete LinePtrArray.at(i);
+
+    delete Canvas_Ptr;
+    delete builder;
     LOG(INFO) << "Finished";
     return 0;
 }

@@ -29,7 +29,6 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
     for (auto _z_value: _z_array){
         if (_z_value == INVALID_2D_VALUE) _z_normalized_array.push_back(INVALID_2D_VALUE);
         else _z_normalized_array.push_back(_z_value / _array_length);
-        LOG(DEBUG) << _z_value;
     }
 
     auto _hist_ptr = new TH2F(_name, _title, 105, 0, 105, 105, 0, 105);
