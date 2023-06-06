@@ -119,14 +119,15 @@ namespace SJUtil{
                 _x_coord_array.push_back(_mapping_x_coord[_index]);
                 _y_coord_array.push_back(_mapping_y_coord[_index]);
                 _z_coord_array.push_back(_1d_values[i]);
+                // LOG(DEBUG) << "Channel: " << i << " -> (" << _mapping_x_coord[_index] << ", " << _mapping_y_coord[_index] << ")";
             }
             else {
                 #ifdef ENABLE_WARNING
                     LOG(WARNING) << "Cannot find channel: " << i;
                 #endif
-                _x_coord_array.push_back(INVALID_2D_VALUE);
-                _y_coord_array.push_back(INVALID_2D_VALUE);
-                _z_coord_array.push_back(T(INVALID_2D_VALUE));
+                //_x_coord_array.push_back(INVALID_2D_VALUE);
+                //_y_coord_array.push_back(INVALID_2D_VALUE);
+                //_z_coord_array.push_back(T(INVALID_2D_VALUE));
             }
         }
         _mapping_2d_array.x_vec     = _x_coord_array;

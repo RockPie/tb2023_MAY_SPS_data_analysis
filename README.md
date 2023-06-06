@@ -10,6 +10,8 @@ Niels Bohr Institute, University of Copenhagen
     - [c. Read a mapping file](#c-read-a-mapping-file)
     - [d. Read a mapping file and generate x,y coordinates](#d-read-a-mapping-file-and-generate-xy-coordinates)
     - [e. Read reconstructed events and get channel locations based on the mapping file](#e-read-reconstructed-events-and-get-channel-locations-based-on-the-mapping-file)
+    - [f. Generate accumulated charge map](#f-generate-accumulated-charge-map)
+  - [3-D reconstruction](#3-d-reconstruction)
 
 
 ## Typical workflow
@@ -109,3 +111,56 @@ for (auto i = 0; i < eventNum; i++){
 f->Close();
 delete builder;
 ```
+
+### f. Generate accumulated charge map
+
+```cpp
+// * Main program
+auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
+auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
+
+auto builder = new CAEN_event_builder();
+builder->read_root_file2event_array(file_root_events_path);
+
+auto eventArrayPtr  = builder->get_event_array_ptr();
+auto eventValidPtr  = builder->get_event_valid_array_ptr();
+auto eventNum       = int(eventValidPtr->size() / 100);
+
+TFile *f = new TFile(file_root_results_path, "RECREATE");
+
+// * Get HGain data
+std::vector<std::vector<Short_t>> HGain_data;
+for (int i = 0; i < eventNum; i++)
+    if (eventValidPtr->at(i))
+        HGain_data.push_back(eventArrayPtr->at(i).LG_charges);
+
+// * Generate 2-D distribution
+auto Canvas_Ptr = new TCanvas("Canvas", "Canvas", 800, 600);
+auto hist2D = SJPlot::distribution_2d(HGain_data, "hgain", "HGain_2D");
+hist2D->Draw("colz");
+gStyle->SetPalette(103);
+
+std::vector<TLine*> LinePtrArray;
+
+LinePtrArray.push_back(
+    SJPlot::add_horizontal_line(35, 0, 105, kWhite, 2, 1));
+LinePtrArray.push_back(
+    SJPlot::add_horizontal_line(70, 0, 105, kWhite, 2, 1));
+LinePtrArray.push_back(
+    SJPlot::add_vertical_line(35, 0, 105, kWhite, 2, 1));
+LinePtrArray.push_back(
+    SJPlot::add_vertical_line(70, 0, 105, kWhite, 2, 1));
+
+Canvas_Ptr->Write();
+
+f->Close();
+
+for (auto i=0; i<4; i++)
+    delete LinePtrArray.at(i);
+
+delete Canvas_Ptr;
+delete builder;
+```
+
+## 3-D reconstruction
+

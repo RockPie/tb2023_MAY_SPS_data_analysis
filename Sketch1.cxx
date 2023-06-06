@@ -1,7 +1,5 @@
 #include "SJ_includes.h"
 
-// TODO: why there is a (0,0) point in 3-D scatter plot?
-
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
@@ -23,47 +21,30 @@ int main(int argc, char* argv[]){
     // * Main program
     auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
     auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
-
     auto builder = new CAEN_event_builder();
     builder->read_root_file2event_array(file_root_events_path);
 
     auto eventArrayPtr  = builder->get_event_array_ptr();
     auto eventValidPtr  = builder->get_event_valid_array_ptr();
-    auto eventNum       = int(eventValidPtr->size() / 100);
-
+    auto eventNum       = int(eventArrayPtr->size()/100);
     TFile *f = new TFile(file_root_results_path, "RECREATE");
 
-    // * Get HGain data
-    std::vector<std::vector<Short_t>> HGain_data;
-    for (int i = 0; i < eventNum; i++)
-        if (eventValidPtr->at(i))
-            HGain_data.push_back(eventArrayPtr->at(i).HG_charges);
+    for (auto i = 0; i < eventNum; i++){
+        if (!eventValidPtr->at(i)) continue;
+        auto HG_charges     = eventArrayPtr->at(i).HG_charges;
+        auto LG_charges     = eventArrayPtr->at(i).LG_charges;
+        auto _currentName   = Form("event_%d", i);
+        auto _currentTitle  = Form("Event %d", i);
+        auto Canvas_Ptr     = new TCanvas(_currentName, _currentTitle, 200,10,  700, 500);
+        auto Graph_Ptr      = SJPlot::scatter_3d(HG_charges, mapping_coords,    _currentName, _currentTitle);
 
-    // * Generate 2-D distribution
-    auto Canvas_Ptr = new TCanvas("Canvas", "Canvas", 800, 600);
-    auto hist2D = SJPlot::distribution_2d(HGain_data, "hgain", "HGain_2D");
-    hist2D->Draw("colz");
-    gStyle->SetPalette(103);
-
-    std::vector<TLine*> LinePtrArray;
-
-    LinePtrArray.push_back(
-        SJPlot::add_horizontal_line(35, 0, 105, kWhite, 2, 1));
-    LinePtrArray.push_back(
-        SJPlot::add_horizontal_line(70, 0, 105, kWhite, 2, 1));
-    LinePtrArray.push_back(
-        SJPlot::add_vertical_line(35, 0, 105, kWhite, 2, 1));
-    LinePtrArray.push_back(
-        SJPlot::add_vertical_line(70, 0, 105, kWhite, 2, 1));
-
-    Canvas_Ptr->Write();
-
+        Canvas_Ptr->Update();
+        Canvas_Ptr->WaitPrimitive();
+        Canvas_Ptr->Write();
+        delete Graph_Ptr;
+        delete Canvas_Ptr;
+    }
     f->Close();
-
-    for (auto i=0; i<4; i++)
-        delete LinePtrArray.at(i);
-
-    delete Canvas_Ptr;
     delete builder;
     LOG(INFO) << "Finished";
     return 0;

@@ -39,7 +39,7 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
             auto _min_dist_x = 105;
             auto _min_dist_y = 105;
             if (i >= 35 && i < 70 && 
-                j >= 35 && j < 70) {
+                j >= 35 && j < 70)
                 //* Central module
                 for (auto k=0; k<_x_array.size();k++)
                     if (_x_array[k] >= 35 && _x_array[k] < 70 && 
@@ -49,11 +49,10 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
                         if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
                             _min_dist_x = _dist_x;
                             _min_dist_y = _dist_y;
-                            _z = _z_normalized_array[k];
+                            _z = _z_normalized_array[k] / 25.0;
                         }
                     }
-            }
-            else {
+            else
                 for (auto k=0; k<_x_array.size();k++)
                     if (((_x_array[k] < 35 || _x_array[k] >= 70) || 
                          (_y_array[k] < 35 || _y_array[k] >= 70)) && _z_normalized_array[k] != INVALID_2D_VALUE){
@@ -62,10 +61,9 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
                         if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
                             _min_dist_x = _dist_x;
                             _min_dist_y = _dist_y;
-                            _z = _z_normalized_array[k];
+                            _z = _z_normalized_array[k] / 49.0;
                         }
                     }
-            }
             _hist_ptr->SetBinContent(i+1, j+1, _z);
         }
 
@@ -130,8 +128,10 @@ TGraph2D* SJPlot::scatter_3d(const std::vector<Short_t> &_events_charges, const 
 
     auto _twoD_values = SJUtil::map1d_to_2d(_events_charges, _mapping_coords);
 
-    for (auto i = 0; i < _twoD_values.x_vec.size(); i++)
+    for (auto i = 0; i < _twoD_values.x_vec.size(); i++){
         _graph_ptr->SetPoint(i, _twoD_values.x_vec[i], _twoD_values.y_vec[i], _twoD_values.value_vec[i]);
+        // LOG(DEBUG) << "x: " << _twoD_values.x_vec[i] << ", y: " << _twoD_values.y_vec[i] << ", z: " << _twoD_values.value_vec[i];
+    }
 
     _graph_ptr->GetXaxis()->SetTitle("x");
     _graph_ptr->GetYaxis()->SetTitle("y");
