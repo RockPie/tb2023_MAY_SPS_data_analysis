@@ -3,6 +3,7 @@
 #include "SJ_eventbuilder.h"
 #include "SJ_utilities.h"
 #include "SJ_plotting.h"
+#include "SJ_fitting.h"
 
 #include <TH1.h>
 #include <TCanvas.h>
@@ -10,3 +11,4 @@
 #include <TLine.h>  
 // for gStyle
 #include <TStyle.h>
+#include <TF2.h>

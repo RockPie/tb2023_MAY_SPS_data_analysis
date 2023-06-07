@@ -17,6 +17,7 @@ add_library(sketchprj1 SHARED
     src/easylogging++.cc
     src/SJ_utilities.cxx
     src/SJ_plotting.cxx
+    src/SJ_fitting.cxx
     include/csv.h
     include/SJ_includes.h
 )

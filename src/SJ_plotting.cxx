@@ -52,7 +52,7 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
                             _z = _z_normalized_array[k] / 25.0;
                         }
                     }
-            else
+            else {
                 for (auto k=0; k<_x_array.size();k++)
                     if (((_x_array[k] < 35 || _x_array[k] >= 70) || 
                          (_y_array[k] < 35 || _y_array[k] >= 70)) && _z_normalized_array[k] != INVALID_2D_VALUE){
@@ -64,6 +64,7 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
                             _z = _z_normalized_array[k] / 49.0;
                         }
                     }
+            }
             _hist_ptr->SetBinContent(i+1, j+1, _z);
         }
 
@@ -139,7 +140,7 @@ TGraph2D* SJPlot::scatter_3d(const std::vector<Short_t> &_events_charges, const 
 
     _graph_ptr->GetXaxis()->SetRangeUser(0, 105);
     _graph_ptr->GetYaxis()->SetRangeUser(0, 105);
-    _graph_ptr->Draw("pcol");
+    // _graph_ptr->Draw("pcol");
     return _graph_ptr;
 }
 

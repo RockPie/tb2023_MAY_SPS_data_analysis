@@ -57,7 +57,8 @@
         "sstream": "cpp",
         "unordered_map": "cpp",
         "algorithm": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "read_hcal_tree.C": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",

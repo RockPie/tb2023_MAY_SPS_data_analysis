@@ -33,6 +33,25 @@ std::vector<std::vector<Short_t>> SJUtil::read_mapping_csv_file(const char* _fil
     return _mapping_array_res;
 }
 
+SJUtil::PedestalInfo SJUtil::read_pedestal_csv_file(const char* _file_name){
+    LOG(INFO) << "Reading pedestal info file: " << _file_name;
+    SJUtil::PedestalInfo _pedestal_info;
+    if (!std::filesystem::exists(_file_name)) {
+        LOG(ERROR) << "File not found: " << _file_name;
+        return _pedestal_info;
+    }
+    io::CSVReader <4> in(_file_name);
+    in.read_header(io::ignore_extra_column, "BoardNum", "ChnNum", "HG_Pedestal", "LG_Pedestal");
+    Short_t _board_num, _channel_num, _hg_pedestal, _lg_pedestal;
+    while (in.read_row(_board_num, _channel_num, _hg_pedestal, _lg_pedestal)) {
+        _pedestal_info.board_vec.push_back(_board_num);
+        _pedestal_info.channel_vec.push_back(_channel_num);
+        _pedestal_info.pedestal_HG_vec.push_back(_hg_pedestal);
+        _pedestal_info.pedestal_LG_vec.push_back(_lg_pedestal);
+    }
+    return _pedestal_info;
+}
+
 std::vector<std::vector<Short_t>> SJUtil::generate_mapping_croodinate(const std::vector<std::vector<Short_t>> &_mapping) {
     auto _board_num_array   = _mapping[0];
     auto _channel_num_array = _mapping[1];
@@ -132,4 +151,5 @@ std::vector<std::vector<Short_t>> SJUtil::generate_mapping_croodinate(
     _mapping_croodinate_array.push_back(_y_coord_array);
     return _mapping_croodinate_array;
 }
+
 

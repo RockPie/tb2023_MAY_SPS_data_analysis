@@ -5,7 +5,6 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-
     int run_number = 2806;
     // * File path
     auto file_CAEN_path          = SJUtil::create_filename_CAEN(
@@ -17,17 +16,19 @@ int main(int argc, char* argv[]){
     auto file_mapping_path       = "../Mapping_tb2023SPS.csv";
     auto file_root_results_path  = SJUtil::create_filename_results(
             "../cachedFiles",  run_number);
+    auto file_pedestal_path      = "../Pedestal_tb_2023SPS.csv";
 
     // * Main program
     auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
     auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
-    auto builder = new CAEN_event_builder();
+    auto pedestalInfo   = SJUtil::read_pedestal_csv_file(file_pedestal_path);
+    auto builder        = new CAEN_event_builder();
     builder->read_root_file2event_array(file_root_events_path);
 
     auto eventArrayPtr  = builder->get_event_array_ptr();
     auto eventValidPtr  = builder->get_event_valid_array_ptr();
-    auto eventNum       = int(eventArrayPtr->size()/100);
-    TFile *f = new TFile(file_root_results_path, "RECREATE");
+    auto eventNum       = int(eventArrayPtr->size()/10000);
+    TFile *f            = new TFile(file_root_results_path, "RECREATE");
 
     for (auto i = 0; i < eventNum; i++){
         if (!eventValidPtr->at(i)) continue;
@@ -37,7 +38,21 @@ int main(int argc, char* argv[]){
         auto _currentTitle  = Form("Event %d", i);
         auto Canvas_Ptr     = new TCanvas(_currentName, _currentTitle, 200,10,  700, 500);
         auto Graph_Ptr      = SJPlot::scatter_3d(HG_charges, mapping_coords,    _currentName, _currentTitle);
+        // ! Guassian fit code here
+        auto _twoD_values = SJUtil::map1d_to_2d(HG_charges, mapping_coords);
 
+        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::gaussian2D, 0, 105, 0, 105, 6);
+        gaussianFunc->SetParameters(50, 50, 10, 10, 0, 3000);
+        gaussianFunc->SetParNames("x_{mean}", "y_{mean}", "#sigma_{x}", "#sigma_{y}", "padastal", "N");
+        gaussianFunc->SetLineColor(kRed);
+        gaussianFunc->SetLineWidth(2);
+        gaussianFunc->SetFillColorAlpha(kBlue, 0.3);
+
+        Graph_Ptr->Fit(gaussianFunc, "R");
+        Canvas_Ptr->cd();
+        Graph_Ptr->Draw("pcolz");
+        gaussianFunc->Draw("surf3 same");
+        // gaussianFunc->Draw("cont1 same");
         Canvas_Ptr->Update();
         Canvas_Ptr->WaitPrimitive();
         Canvas_Ptr->Write();

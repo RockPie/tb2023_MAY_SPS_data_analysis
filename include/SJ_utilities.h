@@ -21,20 +21,23 @@
 #include "easylogging++.h"  // for logging
 #include "csv.h"            // for csv file reading
 
-
-
 namespace SJUtil{
     template <typename T>
-    struct DataSet2D
-    {
+    struct DataSet2D{
         /* coord */
         std::vector<Short_t> x_vec;
         std::vector<Short_t> y_vec;
         /* data */
         std::vector<T> value_vec;
     };
-    
 
+    struct PedestalInfo {
+        std::vector<Short_t> board_vec;
+        std::vector<Short_t> channel_vec;
+        std::vector<Short_t> pedestal_HG_vec;
+        std::vector<Short_t> pedestal_LG_vec;
+    };
+    
     // * Create a file name 
     // * Param: _folder_path: folder path
     // *        _prefix: file name prefix
@@ -87,15 +90,6 @@ namespace SJUtil{
     // *          1. x coordinates
     // *          2. y coordinates
     // *          3. value for the coordinates
-    // std::vector<std::vector<Short_t>> map1d_to_2d(const std::vector<Short_t> &_1d_values, 
-    //     const std::vector<std::vector<Short_t>> &_mapping_coords);
-    // std::vector<std::vector<Short_t>> map1d_to_2d(const std::vector<Short_t> &_1d_values, 
-    //     const std::vector<Short_t> &_mapping_uni_chn, 
-    //     const std::vector<Short_t> &_mapping_x_coord, 
-    //     const std::vector<Short_t> &_mapping_y_coord);
-
-
-
     template <typename T>
     DataSet2D<T> map1d_to_2d(
         const std::vector<T> &_1d_values, 
@@ -145,4 +139,6 @@ namespace SJUtil{
         auto _y_coord_array         = _mapping_coords[2];
         return map1d_to_2d(_1d_values, _uni_channel_num_array, _x_coord_array, _y_coord_array);
     };
+
+    PedestalInfo read_pedestal_csv_file(const char* _file_name);
 }
