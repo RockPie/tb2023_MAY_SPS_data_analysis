@@ -23,8 +23,6 @@
 #include <TTree.h>      // for creating root tree
 #include "easylogging++.h"  // for logging
 
-
-
 class CAEN_data_reader {
 public:
     struct FrameInfo {

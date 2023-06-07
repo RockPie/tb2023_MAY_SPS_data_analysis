@@ -19,6 +19,7 @@
 #include <TTree.h>
 
 #include "SJ_datareading.h"
+#include "SJ_utilities.h"
 #include "easylogging++.h"  // for logging
 
 class CAEN_event_builder{
@@ -38,9 +39,14 @@ public:
     // * Param: _frame_array_ptr: pointer to the frame array
     // *        _frame_num: number of frames to be reconstructed
     // * return: true if success, false if failed
-    bool reconstruct_event(std::vector<CAEN_data_reader::FrameInfo> *_frame_array_ptr, int _frame_num = EVENT_FRAME_NUM);
+    bool reconstruct_event(std::vector<CAEN_data_reader::FrameInfo> *_frame_array_ptr, int _frame_num = EVENT_FRAME_NUM, bool _pedestal_subtraction=false);
 
-    std::vector<Int_t> get_event_sum_array();
+    // * Get the HG charge sum of all channels in the event
+    // * return: HG charge sum of all channels in the event
+    std::vector<Int_t> get_HG_charge_sum_array();
+    // * Get the LG charge sum of all channels in the event
+    // * return: LG charge sum of all channels in the event
+    std::vector<Int_t> get_LG_charge_sum_array();
 
     bool write_event_array2root_file(const char *_root_file_name);
     bool read_root_file2event_array(const char *_root_file_name);
@@ -49,7 +55,11 @@ public:
 
     inline std::vector<bool> *get_event_valid_array_ptr(){return event_valid_array_ptr;}
 
+    // * Copy pedestal info
+    inline void set_pedestal_info(SJUtil::PedestalInfo _pedestal_info){pedestal_info = _pedestal_info;}
+
 private:
     std::vector<EventInfo> *event_array_ptr;
     std::vector<bool> *event_valid_array_ptr;
+    SJUtil::PedestalInfo pedestal_info;
 };

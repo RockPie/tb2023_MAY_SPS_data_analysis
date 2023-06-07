@@ -14,11 +14,16 @@ CAEN_event_builder::~CAEN_event_builder(){
     delete event_valid_array_ptr;
 }
 
-bool CAEN_event_builder::reconstruct_event(std::vector<CAEN_data_reader::FrameInfo> *_frame_array_ptr, int _frame_num){
+bool CAEN_event_builder::reconstruct_event(std::vector<CAEN_data_reader::FrameInfo> *_frame_array_ptr, int _frame_num, bool _pedestal_subtraction){
     if(_frame_array_ptr->size() < _frame_num && _frame_num != INFINITE_FRAMES){
         LOG(ERROR) << "Frame number is less than " << _frame_num;
         return false;
     }
+    if(_pedestal_subtraction)
+        if(pedestal_info.pedestal_HG_vec.size() == 0){
+            LOG(ERROR) << "No valid pedestal information found!";
+            return false;
+        }
     if (_frame_num > _frame_array_ptr->size())
         _frame_num = _frame_array_ptr->size();
     if (_frame_num == INFINITE_FRAMES)
@@ -28,6 +33,11 @@ bool CAEN_event_builder::reconstruct_event(std::vector<CAEN_data_reader::FrameIn
     _tmp_event.timestamps.resize(EVENT_FRAME_NUM);
     _tmp_event.HG_charges.resize(EVENT_FRAME_NUM*DEFAULT_CHANNEL_NUMBER);
     _tmp_event.LG_charges.resize(EVENT_FRAME_NUM*DEFAULT_CHANNEL_NUMBER);
+    // * add invalid charge of -1
+    for (auto i = 0; i < EVENT_FRAME_NUM*DEFAULT_CHANNEL_NUMBER; i++){
+        _tmp_event.HG_charges[i] = INVALID_1D_VALUE;
+        _tmp_event.LG_charges[i] = INVALID_1D_VALUE;
+    }
 
     std::list<Long_t> _trigID_array;
     std::vector<Long_t> _unique_trigID_array;
@@ -69,12 +79,20 @@ bool CAEN_event_builder::reconstruct_event(std::vector<CAEN_data_reader::FrameIn
         auto _event_index = std::distance(_unique_trigID_array.begin(), std::find(_unique_trigID_array.begin(), _unique_trigID_array.end(), _current_trigID));
         // * Fill the corresponding event
         event_array_ptr->at(_event_index).timestamps[_current_boardNum] = _frame_array_ptr->at(i).timestamp;
-        for (auto j = 0; j<DEFAULT_CHANNEL_NUMBER; j++){
-            event_array_ptr->at(_event_index).HG_charges[_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
-                _frame_array_ptr->at(i).HG_charge[j];
-            event_array_ptr->at(_event_index).LG_charges[_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
-                _frame_array_ptr->at(i).LG_charge[j];
-        }
+        if (_pedestal_subtraction)
+            for (auto j = 0; j<DEFAULT_CHANNEL_NUMBER; j++){
+                event_array_ptr->at(_event_index).HG_charges    [_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
+                    _frame_array_ptr->at(i).HG_charge[j] - pedestal_info.pedestal_HG_vec[_current_boardNum*DEFAULT_CHANNEL_NUMBER+j];
+                event_array_ptr->at(_event_index).LG_charges    [_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
+                    _frame_array_ptr->at(i).LG_charge[j] - pedestal_info.pedestal_LG_vec[_current_boardNum*DEFAULT_CHANNEL_NUMBER+j];
+            }
+        else
+            for (auto j = 0; j<DEFAULT_CHANNEL_NUMBER; j++){
+                event_array_ptr->at(_event_index).HG_charges    [_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
+                    _frame_array_ptr->at(i).HG_charge[j];
+                event_array_ptr->at(_event_index).LG_charges    [_current_boardNum*DEFAULT_CHANNEL_NUMBER+j] = 
+                    _frame_array_ptr->at(i).LG_charge[j];
+            }
     }
     LOG(DEBUG) << "Event array filled";
 
@@ -91,15 +109,29 @@ bool CAEN_event_builder::reconstruct_event(std::vector<CAEN_data_reader::FrameIn
     return true;
 }
 
-std::vector<Int_t> CAEN_event_builder::get_event_sum_array() {
+std::vector<Int_t> CAEN_event_builder::get_HG_charge_sum_array() {
     std::vector<Int_t> _event_sum_array;
     for (auto i = 0; i<event_array_ptr->size(); i++){
         if (!event_valid_array_ptr->at(i))
             continue;
         auto _sum = 0;
-        for (auto j = 0; j<event_array_ptr->at(i).HG_charges.size(); j++){
-            _sum += event_array_ptr->at(i).HG_charges[j];
-        }
+        for (auto j = 0; j<event_array_ptr->at(i).HG_charges.size(); j++)
+            if (event_array_ptr->at(i).HG_charges[j] != INVALID_1D_VALUE)
+                _sum += event_array_ptr->at(i).HG_charges[j];
+        _event_sum_array.push_back(_sum);
+    }
+    return _event_sum_array;
+}
+
+std::vector<Int_t> CAEN_event_builder::get_LG_charge_sum_array() {
+    std::vector<Int_t> _event_sum_array;
+    for (auto i = 0; i<event_array_ptr->size(); i++){
+        if (!event_valid_array_ptr->at(i))
+            continue;
+        auto _sum = 0;
+        for (auto j = 0; j<event_array_ptr->at(i).LG_charges.size(); j++)
+            if (event_array_ptr->at(i).LG_charges[j] != INVALID_1D_VALUE)
+                _sum += event_array_ptr->at(i).LG_charges[j];
         _event_sum_array.push_back(_sum);
     }
     return _event_sum_array;

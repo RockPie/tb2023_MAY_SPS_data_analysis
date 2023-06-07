@@ -8,6 +8,7 @@
 #pragma once
 
 #define INVALID_2D_VALUE            -1
+#define INVALID_1D_VALUE            -1
 // #define ENABLE_WARNING
 
 #define DEFAULT_PREFIX_TXT          "Run"
@@ -58,6 +59,8 @@ namespace SJUtil{
     inline char* create_filename_results(const char* _folder_path, int _run_num){
         return create_filename(_folder_path, DEFAULT_PREFIX_ROOT, _run_num, "_results", DEFAULT_EXTENSION_ROOT);
     }
+
+    PedestalInfo read_pedestal_csv_file(const char* _file_name);
 
     // * Read mapping csv file
     // * Param: _file_name: csv file name
@@ -116,9 +119,9 @@ namespace SJUtil{
                 // LOG(DEBUG) << "Channel: " << i << " -> (" << _mapping_x_coord[_index] << ", " << _mapping_y_coord[_index] << ")";
             }
             else {
-                #ifdef ENABLE_WARNING
-                    LOG(WARNING) << "Cannot find channel: " << i;
-                #endif
+                // #ifdef ENABLE_WARNING
+                // LOG(WARNING) << "Cannot find channel: " << i;
+                //#endif
                 //_x_coord_array.push_back(INVALID_2D_VALUE);
                 //_y_coord_array.push_back(INVALID_2D_VALUE);
                 //_z_coord_array.push_back(T(INVALID_2D_VALUE));
@@ -140,5 +143,38 @@ namespace SJUtil{
         return map1d_to_2d(_1d_values, _uni_channel_num_array, _x_coord_array, _y_coord_array);
     };
 
-    PedestalInfo read_pedestal_csv_file(const char* _file_name);
+    template <typename T>
+    int* map_max_point_index(const DataSet2D<T> & _mapped_data){
+        auto _map_values = _mapped_data.value_vec;
+        auto _max_value = *std::max_element(_map_values.begin(), _map_values.end());
+        auto _max_index = std::find(_map_values.begin(), _map_values.end(), _max_value) - _map_values.begin();
+        int* _max_index_array = new int[3];
+        _max_index_array[0] = _mapped_data.x_vec[_max_index];
+        _max_index_array[1] = _mapped_data.y_vec[_max_index];
+        _max_index_array[2] = int(_max_value);
+        return _max_index_array;
+    };
+
+    template <typename T>
+    DataSet2D<T> noise_subtracted_data(const DataSet2D<T> & _mapped_data, Short_t _noise_floor){
+        if (_noise_floor < 0) {
+            LOG(ERROR) << "Noise floor should be positive";
+            return _mapped_data;
+        }
+        auto _original_data_length = _mapped_data.value_vec.size();
+        DataSet2D<T> _noise_subtracted_data;
+        for (auto i = 0; i < _original_data_length; i++) {
+            auto _noise_subtracted_value = _mapped_data.value_vec[i] - _noise_floor;
+            auto _current_x = _mapped_data.x_vec[i];
+            auto _current_y = _mapped_data.y_vec[i];
+            if (_noise_subtracted_value >= 0) {
+                _noise_subtracted_data.value_vec.push_back(_noise_subtracted_value);
+                _noise_subtracted_data.x_vec.push_back(_current_x);
+                _noise_subtracted_data.y_vec.push_back(_current_y);
+            }
+        }
+        auto _noise_subtracted_data_length = _noise_subtracted_data.value_vec.size();
+        LOG_IF(_noise_subtracted_data_length < 10, WARNING) << "Noise subtracted data length is too small: " << _noise_subtracted_data_length;
+        return _noise_subtracted_data;
+    };
 }
