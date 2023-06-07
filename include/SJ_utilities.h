@@ -16,6 +16,9 @@
 #define DEFAULT_PREFIX_ROOT         "Run_"
 #define DEFAULT_EXTENSION_ROOT      ".root"
 
+#define AREA_CENTRAL_MODULE         25
+#define AREA_OUTER_MODULE           49
+
 #include <vector>           // for std::vector
 #include <string>           // for std::string
 #include <TFile.h>          
@@ -142,6 +145,28 @@ namespace SJUtil{
         auto _y_coord_array         = _mapping_coords[2];
         return map1d_to_2d(_1d_values, _uni_channel_num_array, _x_coord_array, _y_coord_array);
     };
+
+    template <typename T>
+    DataSet2D<T> area_normalized_data(const DataSet2D<T> & _mapped_data){
+        auto _central_x_min  = 34;
+        auto _central_x_max  = 70;
+        auto _central_y_min  = 34;
+        auto _central_y_max  = 70;
+        Double_t _area_ratio = double(AREA_CENTRAL_MODULE) / double(AREA_OUTER_MODULE);
+        DataSet2D<T>_copy_mapped_data;
+        auto _data_length = _mapped_data.value_vec.size();
+        for (auto i=0; i<_data_length; i++){
+            auto _x = _mapped_data.x_vec[i];
+            auto _y = _mapped_data.y_vec[i];
+            _copy_mapped_data.x_vec.push_back(_x);
+            _copy_mapped_data.y_vec.push_back(_y);
+            if (_x > _central_x_min && _x < _central_x_max && _y > _central_y_min && _y < _central_y_max)
+                _copy_mapped_data.value_vec.push_back(_mapped_data.value_vec[i]);
+            else
+                _copy_mapped_data.value_vec.push_back(T(double(_mapped_data.value_vec[i]) * _area_ratio));
+        }
+        return _copy_mapped_data;
+    }
 
     // * Get the max value and its position in the 2-d mapping coordinates
     // * This function is used to get an initial value for the fitting

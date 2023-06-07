@@ -1,5 +1,7 @@
 #include "SJ_includes.h"
 
+// TODO: Fix cmakelists.txt with correct project name
+
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
@@ -13,10 +15,13 @@ int main(int argc, char* argv[]){
             "../cachedFiles",  run_number);
     auto file_root_events_path   = SJUtil::create_filename_events(
             "../cachedFiles",  run_number);
-    auto file_mapping_path       = "../Mapping_tb2023SPS.csv";
+    auto file_mapping_path       = "../dataFiles/Mapping_tb2023SPS.csv";
     auto file_root_results_path  = SJUtil::create_filename_results(
             "../cachedFiles",  run_number);
-    auto file_pedestal_path      = "../Pedestal_tb_2023SPS.csv";
+    auto file_pedestal_path      = "../dataFiles/Pedestal_tb_2023SPS.csv";
+    auto file_original_fitting_path = SJUtil::create_filename("../cachedFiles", DEFAULT_PREFIX_ROOT, run_number, "_fit_res", DEFAULT_EXTENSION_ROOT);
+    auto file_mixed_fitting_path = SJUtil::create_filename("../cachedFiles", DEFAULT_PREFIX_ROOT, run_number, "_mixed_fit_res", DEFAULT_EXTENSION_ROOT);
+
 
     // * Other info generation
     auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
@@ -36,7 +41,7 @@ int main(int argc, char* argv[]){
     auto total_valid_events = 0;
     auto total_fit_success  = 0;
 
-    auto NDF                = 5;
+    auto fit_param_num      = 5;
     
     TFile *f = new TFile(file_root_results_path, "RECREATE");
 
@@ -57,24 +62,28 @@ int main(int argc, char* argv[]){
         auto _twoD_lg_values   = SJUtil::map1d_to_2d(LG_charges, mapping_coords);
         auto _twoD_hg_values_NS= SJUtil::noise_subtracted_data(_twoD_hg_values, 10);
         auto _twoD_lg_values_NS= SJUtil::noise_subtracted_data(_twoD_lg_values, 10);
-        // auto _twoD_hg_values_NSS = SJUtil::substitued_data(
-        //     _twoD_hg_values_NS, 
-        //     _twoD_lg_values_NS, 
-        //     Short_t(SUBSTITUE_THRESHOLD),
-        //     Short_t(HG_RELATIVE_GAIN)
-        // );
-        auto _twoD_hg_values_NSS = _twoD_hg_values_NS;
+        auto _twoD_hg_values_NSN= SJUtil::area_normalized_data(_twoD_hg_values_NS);
+        auto _twoD_lg_values_NSN= SJUtil::area_normalized_data(_twoD_lg_values_NS);
+        //auto _twoD_hg_values_NSS = SJUtil::substitued_data(
+        //    _twoD_hg_values_NS, 
+        //    _twoD_lg_values_NS, 
+        //    Short_t(SUBSTITUE_THRESHOLD),
+        //    Short_t(HG_RELATIVE_GAIN)
+        //);
+        // auto _twoD_hg_values_NSS = _twoD_hg_values_NS;
 
-        if (_twoD_hg_values_NSS.value_vec.size() <= NDF + 1) continue;
+        auto _target_event = _twoD_hg_values_NSN;
+
+        if ( _target_event.value_vec.size() <= fit_param_num + 1) continue;
         total_valid_events++;
-        auto Graph_Ptr      = SJPlot::scatter_3d_raw(_twoD_hg_values_NSS, _currentName, _currentTitle);
+        auto Graph_Ptr      = SJPlot::scatter_3d_raw( _target_event, _currentName, _currentTitle);
 
         // * Fit 
-        auto _initial_values = SJUtil::map_max_point_index(_twoD_hg_values_NSS);
+        auto _initial_values = SJUtil::map_max_point_index( _target_event);
         if (_initial_values == nullptr){
             int _initial_values[3] = {50, 50, 4000};
         }
-        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::gaussian2D, 0, 105, 0, 105, NDF);
+        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::gaussian2D, 0, 105, 0, 105, fit_param_num);
         gaussianFunc->SetParameters(
             _initial_values[0], 
             _initial_values[1], 
@@ -91,13 +100,13 @@ int main(int argc, char* argv[]){
             LOG(WARNING) << "Fitting failed for event "<< i;
         else {
             total_fit_success++;
-            double* _temp_parameters = new double[NDF + 3];
-            for (auto i = 0; i < NDF + 1; i++){
+            double* _temp_parameters = new double[fit_param_num + 3];
+            for (auto i = 0; i < fit_param_num + 1; i++){
                 _temp_parameters[i] = gaussianFunc->GetParameter(i);
             }
-            _temp_parameters[NDF] = gaussianFunc->GetChisquare();
-            _temp_parameters[NDF + 1] = gaussianFunc->GetNDF();
-            _temp_parameters[NDF + 2] = double(i);
+            _temp_parameters[fit_param_num] = gaussianFunc->GetChisquare();
+            _temp_parameters[fit_param_num + 1] = gaussianFunc->GetNDF();
+            _temp_parameters[fit_param_num + 2] = double(i);
             _fit_result.push_back(_temp_parameters);
         }
         Canvas_Ptr->cd();
@@ -118,7 +127,7 @@ int main(int argc, char* argv[]){
     f->Close();
     delete builder;
     LOG(INFO) << "Finished fitting and plotting";
-    SJUtil::write_fitted_data_file("../cachedFiles/Run_2806_fit_res.root", _fit_result);
+    SJUtil::write_fitted_data_file(file_original_fitting_path, _fit_result);
     return 0;
     }
 
