@@ -130,7 +130,7 @@ TGraph2D* SJPlot::scatter_3d(const std::vector<Short_t> &_events_charges, const 
 
     auto _twoD_values = SJUtil::map1d_to_2d(_events_charges, _mapping_coords);
 
-    auto _noise_subtracted = SJUtil::noise_subtracted_data(_twoD_values, 10);
+    auto _noise_subtracted = SJUtil::noise_subtracted_data(_twoD_values, 20);
 
     for (auto i = 0; i < _noise_subtracted.x_vec.size(); i++){
         _graph_ptr->SetPoint(i, _noise_subtracted.x_vec[i], _noise_subtracted.y_vec[i], _noise_subtracted.value_vec[i]);
@@ -150,4 +150,32 @@ TGraph2D* SJPlot::scatter_3d(const std::vector<Short_t> &_events_charges, const 
 TGraph2D* SJPlot::scatter_3d(const std::vector<Short_t> &_events_charges, const char* _name, const char* _title){
     auto _mapping_coords = SJUtil::generate_mapping_croodinate(SJUtil::read_mapping_csv_file(DEFAULT_MAPPING_FILE_PATH));
     return scatter_3d(_events_charges, _mapping_coords, _name, _title);
+}
+
+TGraph2D* SJPlot::scatter_3d_raw(
+    const SJUtil::DataSet2D<Short_t> &_mapped_events, 
+    const char* _name, 
+    const char* _title){
+    auto _graph_ptr = new TGraph2D();
+    _graph_ptr->SetMarkerStyle(20);
+    _graph_ptr->SetMarkerSize(2);
+    _graph_ptr->SetMarkerColor(kRed);
+
+    _graph_ptr->SetTitle(_title);
+    _graph_ptr->SetName(_name);
+
+    for (auto i = 0; i < _mapped_events.x_vec.size(); i++)
+        _graph_ptr->SetPoint(i, 
+            _mapped_events.x_vec[i],
+            _mapped_events.y_vec[i], 
+            _mapped_events.value_vec[i]);
+
+    _graph_ptr->GetXaxis()->SetTitle("x");
+    _graph_ptr->GetYaxis()->SetTitle("y");
+    _graph_ptr->GetZaxis()->SetTitle("adc");
+
+    _graph_ptr->GetXaxis()->SetRangeUser(0, 105);
+    _graph_ptr->GetYaxis()->SetRangeUser(0, 105);
+    // _graph_ptr->Draw("pcol");
+    return _graph_ptr;
 }

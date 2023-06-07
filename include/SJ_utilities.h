@@ -18,6 +18,7 @@
 
 #include <vector>           // for std::vector
 #include <string>           // for std::string
+#include <TFile.h>          
 #include <TTree.h>          // for root tree
 #include "easylogging++.h"  // for logging
 #include "csv.h"            // for csv file reading
@@ -60,7 +61,14 @@ namespace SJUtil{
         return create_filename(_folder_path, DEFAULT_PREFIX_ROOT, _run_num, "_results", DEFAULT_EXTENSION_ROOT);
     }
 
+    // * Read .csv file containing pedestal information
+    // * Param: _file_name: csv file name
+    // * Return: a struct containing pedestal information
     PedestalInfo read_pedestal_csv_file(const char* _file_name);
+
+    // * Write .root file for saving fitting information
+    // ! NOTE: this can only save parameters from gaussian2D
+    bool write_fitted_data_file(const char* _file_name, const std::vector<double*>& _fitted_data);
 
     // * Read mapping csv file
     // * Param: _file_name: csv file name
@@ -118,14 +126,6 @@ namespace SJUtil{
                 _z_coord_array.push_back(_1d_values[i]);
                 // LOG(DEBUG) << "Channel: " << i << " -> (" << _mapping_x_coord[_index] << ", " << _mapping_y_coord[_index] << ")";
             }
-            else {
-                // #ifdef ENABLE_WARNING
-                // LOG(WARNING) << "Cannot find channel: " << i;
-                //#endif
-                //_x_coord_array.push_back(INVALID_2D_VALUE);
-                //_y_coord_array.push_back(INVALID_2D_VALUE);
-                //_z_coord_array.push_back(T(INVALID_2D_VALUE));
-            }
         }
         _mapping_2d_array.x_vec     = _x_coord_array;
         _mapping_2d_array.y_vec     = _y_coord_array;
@@ -143,8 +143,19 @@ namespace SJUtil{
         return map1d_to_2d(_1d_values, _uni_channel_num_array, _x_coord_array, _y_coord_array);
     };
 
+    // * Get the max value and its position in the 2-d mapping coordinates
+    // * This function is used to get an initial value for the fitting
+    // * Param: _mapped_data: a mapped event data
+    // * Return: a pointer to an array, they are:
+    // *          1. x coordinates
+    // *          2. y coordinates
+    // *          3. value for the coordinates
     template <typename T>
     int* map_max_point_index(const DataSet2D<T> & _mapped_data){
+        if (_mapped_data.value_vec.size() == 0) {
+            LOG(ERROR) << "Empty mapped data";
+            return nullptr;
+        }
         auto _map_values = _mapped_data.value_vec;
         auto _max_value = *std::max_element(_map_values.begin(), _map_values.end());
         auto _max_index = std::find(_map_values.begin(), _map_values.end(), _max_value) - _map_values.begin();
@@ -155,6 +166,11 @@ namespace SJUtil{
         return _max_index_array;
     };
 
+    // * Get a new 2-d mapping coordinates without data points under
+    // * noise floor
+    // * Param: _mapped_data: a mapped event data
+    // *        _noise_floor: noise floor value
+    // * Return: filtered 2-d mapping coordinates
     template <typename T>
     DataSet2D<T> noise_subtracted_data(const DataSet2D<T> & _mapped_data, Short_t _noise_floor){
         if (_noise_floor < 0) {
@@ -174,7 +190,40 @@ namespace SJUtil{
             }
         }
         auto _noise_subtracted_data_length = _noise_subtracted_data.value_vec.size();
-        LOG_IF(_noise_subtracted_data_length < 10, WARNING) << "Noise subtracted data length is too small: " << _noise_subtracted_data_length;
+        // LOG_IF(_noise_subtracted_data_length < 10, WARNING) << "Noise subtracted data length is too small: " << _noise_subtracted_data_length;
         return _noise_subtracted_data;
     };
+
+    template <typename T>
+    DataSet2D<T> substitued_data(
+        const DataSet2D<T> & _hg_mapped_data,
+        const DataSet2D<T> & _lg_mapped_data,
+        T _substitute_threshold,
+        T _gain_ratio){
+        auto _copy_hg_mapped_data = _hg_mapped_data;
+        auto _hg_mapped_data_length = _copy_hg_mapped_data.value_vec.size();
+        for (auto i=0; i<_hg_mapped_data_length; i++){
+            if (_copy_hg_mapped_data.value_vec[i] > _substitute_threshold){
+                auto _target_x = _copy_hg_mapped_data.x_vec[i];
+                auto _target_y = _copy_hg_mapped_data.y_vec[i];
+                // * Find the corresponding low gain data
+                auto _lg_mapped_data_length = _lg_mapped_data.value_vec.size();
+                bool _is_found = false;
+                for (auto j=0; j<_lg_mapped_data_length; j++){
+                    if (_lg_mapped_data.x_vec[j] == _target_x && _lg_mapped_data.y_vec[j] == _target_y){
+                        // LOG(DEBUG) << "Substitute (" << _target_x << ", " << _target_y << ") from "<< _copy_hg_mapped_data.value_vec[i] << " to " << _lg_mapped_data.value_vec[j] * _gain_ratio;
+                        _is_found = true;
+                        _copy_hg_mapped_data.value_vec[i] = _lg_mapped_data.value_vec[j] * _gain_ratio;
+                        break;
+                    }
+                }
+                if (!_is_found){
+                    // LOG(WARNING) << "Cannot find the corresponding low gain data for (" << _target_x << ", " << _target_y << ")";
+                }
+            }
+        }
+        return _copy_hg_mapped_data;
+    }
+
+
 }

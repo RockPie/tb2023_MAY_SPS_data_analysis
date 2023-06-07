@@ -34,7 +34,7 @@ std::vector<std::vector<Short_t>> SJUtil::read_mapping_csv_file(const char* _fil
 }
 
 SJUtil::PedestalInfo SJUtil::read_pedestal_csv_file(const char* _file_name){
-    LOG(INFO) << "Reading pedestal info file: " << _file_name;
+    LOG(INFO) << "Reading pedestal file: " << _file_name;
     SJUtil::PedestalInfo _pedestal_info;
     if (!std::filesystem::exists(_file_name)) {
         LOG(ERROR) << "File not found: " << _file_name;
@@ -152,4 +152,52 @@ std::vector<std::vector<Short_t>> SJUtil::generate_mapping_croodinate(
     return _mapping_croodinate_array;
 }
 
+bool SJUtil::write_fitted_data_file(const char* _file_name, const std::vector<double*>& _fitted_data){
+    if (_fitted_data.size() == 0) {
+        LOG(ERROR) << "Fitted data is invalid for saving";
+        return false;
+    }
+    if (strlen(_file_name) == 0) {
+        LOG(ERROR) << "File name is invalid for saving";
+        return false;
+    }
+
+    TFile* _fit_data_file = new TFile(_file_name, "RECREATE");
+    TTree* _fit_data_tree = new TTree("fitTree", "fit results");
+    int _num_params = 5;
+
+    std::vector<double> _fit_result_x;
+    std::vector<double> _fit_result_y;
+    std::vector<double> _fit_result_z;
+    std::vector<double> _fit_result_x_sigma;
+    std::vector<double> _fit_result_y_sigma;
+    std::vector<double> _fit_result_chi2;
+    std::vector<double> _fit_result_ndf;
+    std::vector<double> _fit_result_event_id;
+
+    for (auto i = 0; i < _fitted_data.size(); i++){
+        _fit_result_x.push_back(_fitted_data[i][0]);
+        _fit_result_y.push_back(_fitted_data[i][1]);
+        _fit_result_z.push_back(_fitted_data[i][4]);
+        _fit_result_x_sigma.push_back(_fitted_data[i][2]);
+        _fit_result_y_sigma.push_back(_fitted_data[i][3]);
+        _fit_result_chi2.push_back(_fitted_data[i][ _num_params]);
+        _fit_result_ndf.push_back(_fitted_data[i][ _num_params + 1]);
+        _fit_result_event_id.push_back(_fitted_data[i][ _num_params + 2]);
+    }
+
+    _fit_data_tree->Branch("x", &_fit_result_x);
+    _fit_data_tree->Branch("y", &_fit_result_y);
+    _fit_data_tree->Branch("z", &_fit_result_z);
+    _fit_data_tree->Branch("x_sigma", &_fit_result_x_sigma);
+    _fit_data_tree->Branch("y_sigma", &_fit_result_y_sigma);
+    _fit_data_tree->Branch("chi2", &_fit_result_chi2);
+    _fit_data_tree->Branch("ndf", &_fit_result_ndf);
+    _fit_data_tree->Branch("event_id", &_fit_result_event_id);
+    _fit_data_tree->Fill();
+    _fit_data_tree->Write();
+    
+    _fit_data_file->Close();
+    return true;
+}
 

@@ -22,6 +22,11 @@ namespace SJPlot{
         const char* _title);
     TGraph2D* scatter_3d(const std::vector<Short_t> &_events_charges, const char* _name, const char* _title);
 
+    TGraph2D* scatter_3d_raw(
+        const SJUtil::DataSet2D<Short_t> &_mapped_events, 
+        const char* _name, 
+        const char* _title);
+
     TH3F* distribution_3d(const std::vector<std::vector<Short_t>> &_events_charges, const char* _name, const char* _title);
 
     inline TLine* add_horizontal_line(const Double_t _y, const Double_t _x_min, const Double_t _x_max, const Color_t _color, const Style_t _style, const Width_t _width){
