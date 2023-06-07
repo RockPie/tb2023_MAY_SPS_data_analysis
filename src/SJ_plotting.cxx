@@ -158,7 +158,7 @@ TGraph2D* SJPlot::scatter_3d_raw(
     const char* _title){
     auto _graph_ptr = new TGraph2D();
     _graph_ptr->SetMarkerStyle(20);
-    _graph_ptr->SetMarkerSize(2);
+    _graph_ptr->SetMarkerSize(1);
     _graph_ptr->SetMarkerColor(kRed);
 
     _graph_ptr->SetTitle(_title);
@@ -169,6 +169,47 @@ TGraph2D* SJPlot::scatter_3d_raw(
             _mapped_events.x_vec[i],
             _mapped_events.y_vec[i], 
             _mapped_events.value_vec[i]);
+
+    _graph_ptr->GetXaxis()->SetTitle("x");
+    _graph_ptr->GetYaxis()->SetTitle("y");
+    _graph_ptr->GetZaxis()->SetTitle("adc");
+
+    _graph_ptr->GetXaxis()->SetRangeUser(0, 105);
+    _graph_ptr->GetYaxis()->SetRangeUser(0, 105);
+    // _graph_ptr->Draw("pcol");
+    return _graph_ptr;
+}
+
+TGraph2D* SJPlot::scatter_3d_double_raw(
+    const SJUtil::DataSet2D<Short_t> &_mapped_events0, 
+    const SJUtil::DataSet2D<Short_t> &_mapped_events1, 
+    const char* _name, 
+    const char* _title){
+    auto _graph_ptr = new TGraph2D();
+    _graph_ptr->SetMarkerStyle(20);
+    _graph_ptr->SetMarkerSize(1);
+    // _graph_ptr->SetMarkerColor(kBlue);
+
+    _graph_ptr->SetTitle(_title);
+    _graph_ptr->SetName(_name);
+
+    auto _data_length0 = _mapped_events0.value_vec.size();
+    auto _data_length1 = _mapped_events1.value_vec.size();
+
+    for (auto i = 0; i < _data_length0; i++){
+        _graph_ptr->SetPoint(i, 
+            _mapped_events0.x_vec[i],
+            _mapped_events0.y_vec[i], 
+            _mapped_events0.value_vec[i]);
+    }
+
+
+    for (auto i = 0; i < _data_length1; i++){
+        _graph_ptr->SetPoint(i+_data_length0, 
+            _mapped_events1.x_vec[i],
+            _mapped_events1.y_vec[i], 
+            _mapped_events1.value_vec[i]*9);
+    }
 
     _graph_ptr->GetXaxis()->SetTitle("x");
     _graph_ptr->GetYaxis()->SetTitle("y");

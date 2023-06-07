@@ -34,7 +34,24 @@ namespace SJUtil{
         std::vector<Short_t> y_vec;
         /* data */
         std::vector<T> value_vec;
+
+        DataSet2D<T> operator*(int multiplier) const {
+           DataSet2D<T> result = *this;
+           for (auto& value : result.value_vec) {
+               value *= multiplier;
+           }
+           return result;
+        }   
+
+        DataSet2D<T> operator*(double multiplier) const {
+           DataSet2D<T> result = *this;
+           for (auto& value : result.value_vec) {
+               value = T(value * multiplier);
+           }
+           return result;
+        }   
     };
+
 
     struct PedestalInfo {
         std::vector<Short_t> board_vec;
