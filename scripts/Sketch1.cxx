@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
     builder->read_root_file2event_array(file_root_events_path);
     auto eventArrayPtr  = builder->get_event_array_ptr();
     auto eventValidPtr  = builder->get_event_valid_array_ptr();
-    auto eventNum       = int(eventArrayPtr->size()/10);
+    auto eventNum       = int(eventArrayPtr->size()/200);
     auto eventNum_progress_divider = eventNum / 10;
 
     auto total_events       = 0;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
         // );
         // auto _twoD_hg_values_NSS = _twoD_hg_values_NS;
 
-        auto _target_event = _twoD_lg_values_NA*9;
+        auto _target_event = _twoD_hg_values_NA;
 
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
             continue;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
             _target_event, _currentName, _currentTitle);
         Graph_Ptr->SetMarkerColor(kBlue);
         auto Graph_Sub_Ptr      = SJPlot::scatter_3d_raw( 
-            _twoD_hg_values_NA, _currentName, _currentTitle);
+            _twoD_lg_values_NA*9.7, _currentName, _currentTitle);
         Graph_Sub_Ptr->SetMarkerColor(kRed);
         Graph_Sub_Ptr->SetMarkerStyle(21);
 
@@ -123,11 +123,12 @@ int main(int argc, char* argv[]){
             _fit_result.push_back(_temp_parameters);
         }
         Canvas_Ptr->cd();
-        Graph_Ptr->Draw("p");
-        //Graph_Sub_Ptr->Draw("p same");
+        Graph_Sub_Ptr->Draw("p");
+        Graph_Ptr->Draw("p same");
+
         
         
-        gaussianFunc->Draw("surf3 same");
+        //gaussianFunc->Draw("surf3 same");
         // * Set the z axis range
         Canvas_Ptr->Update();
         Canvas_Ptr->WaitPrimitive();

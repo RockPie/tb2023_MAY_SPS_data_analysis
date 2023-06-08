@@ -1,3 +1,4 @@
+# * See https://root.cern/manual/integrate_root_into_my_cmake_project/ for more info
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 17)
 project(sketchprj1)
@@ -10,8 +11,6 @@ find_package(ROOT REQUIRED COMPONENTS
     Graf3d
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(${ROOT_INCLUDE_DIRS})
 
 add_library(sketchprj1_lib SHARED 
     src/SJ_datareading.cxx
@@ -25,6 +24,7 @@ add_library(sketchprj1_lib SHARED
 )
 
 # * Change script name here to run different scripts
+# add_executable(sketchprj1_main ./scripts/sum_analysis.cxx)
 add_executable(sketchprj1_main ./scripts/Sketch1.cxx)
 
 target_link_libraries(sketchprj1_lib PUBLIC 

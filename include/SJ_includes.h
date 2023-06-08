@@ -9,6 +9,8 @@
 #include <TCanvas.h>
 #include <TGraph2D.h>
 #include <TLine.h>  
+#include <TLegend.h>
+#include <TLatex.h>
 // for gStyle
 #include <TStyle.h>
 #include <TF2.h>

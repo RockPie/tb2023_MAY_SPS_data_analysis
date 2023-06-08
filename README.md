@@ -17,6 +17,8 @@ Niels Bohr Institute, University of Copenhagen
 
 ## Typical workflow
 
+![workflow](./Architecture.drawio.png)
+
 ### a. Read data from original text file and write to root frames file
 
 ```mermaid
