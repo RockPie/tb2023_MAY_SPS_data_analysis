@@ -10,8 +10,10 @@ find_package(ROOT REQUIRED COMPONENTS
     Graf3d
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${ROOT_INCLUDE_DIRS})
 
-add_library(sketchprj1 SHARED 
+add_library(sketchprj1_lib SHARED 
     src/SJ_datareading.cxx
     src/SJ_eventbuilder.cxx
     src/easylogging++.cc
@@ -21,15 +23,17 @@ add_library(sketchprj1 SHARED
     include/csv.h
     include/SJ_includes.h
 )
-target_link_libraries(sketchprj1 PUBLIC 
+
+# * Change script name here to run different scripts
+add_executable(sketchprj1_main ./scripts/Sketch1.cxx)
+
+target_link_libraries(sketchprj1_lib PUBLIC 
     ROOT::Core 
     ROOT::Tree
     ROOT::Hist
-    # for TCanvas
     ROOT::Gpad
     ROOT::Graf3d
 )
 
-add_executable(Main Sketch1.cxx)
-target_link_libraries(Main PUBLIC sketchprj1)
+target_link_libraries(sketchprj1_main sketchprj1_lib)
 
