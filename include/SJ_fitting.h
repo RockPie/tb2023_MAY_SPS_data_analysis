@@ -9,6 +9,21 @@
 
 #define HG_RELATIVE_GAIN    9.0
 #define SUBSTITUE_THRESHOLD 4096-100
+
+// * Roofit Gaussian 2D
+#include <RooRealVar.h>
+#include <RooDataSet.h>
+#include <RooDataHist.h>
+#include <RooGaussian.h>
+#include <RooPlot.h>
+#include <RooFitResult.h>
+#include <RooArgList.h>
+#include <RooArgSet.h>
+#include <RooAddPdf.h>
+#include <RooProdPdf.h>
+#include <RooFormulaVar.h>
+#include <RooAbsReal.h>
+
 #include "easylogging++.h"
 
 namespace SJFunc{

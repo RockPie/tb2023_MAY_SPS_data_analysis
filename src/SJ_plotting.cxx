@@ -6,7 +6,7 @@
 // *                |--- [event1]
 // *                |--- [event2]
 // *                |--- ...
-TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_charges, const char *_name, const char *_title){
+TH2D *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_charges, const char *_name, const char *_title){
     std::vector<Long_t> _chn_sums;
     _chn_sums.resize(_events_charges[0].size());
     for (auto _value : _chn_sums) _value = 0;
@@ -31,7 +31,7 @@ TH2F *SJPlot::distribution_2d(const std::vector<std::vector<Short_t>> &_events_c
         else _z_normalized_array.push_back(_z_value / _array_length);
     }
 
-    auto _hist_ptr = new TH2F(_name, _title, 105, 0, 105, 105, 0, 105);
+    auto _hist_ptr = new TH2D(_name, _title, 105, 0, 105, 105, 0, 105);
     // * Set each bin value according to the nearest point
     for (auto i = 0; i < 105; i++)
         for (auto j = 0; j < 105; j++){

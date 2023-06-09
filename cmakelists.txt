@@ -9,6 +9,9 @@ find_package(ROOT REQUIRED COMPONENTS
     Hist
     Gpad
     Graf3d
+    # for roofit
+    RooFitCore
+    RooFit
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -29,6 +32,8 @@ target_link_libraries(sketchprj1_lib PUBLIC
     ROOT::Hist
     ROOT::Gpad
     ROOT::Graf3d
+    ROOT::RooFitCore
+    ROOT::RooFit
 )
 
 # * Change script name here to run different scripts

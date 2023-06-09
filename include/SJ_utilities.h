@@ -23,6 +23,7 @@
 #include <string>           // for std::string
 #include <TFile.h>          
 #include <TTree.h>          // for root tree
+#include <TH2D.h>           // for 2d histogram
 #include "easylogging++.h"  // for logging
 #include "csv.h"            // for csv file reading
 
@@ -89,6 +90,8 @@ namespace SJUtil{
     // * Write .root file for saving fitting information
     // ! NOTE: this can only save parameters from gaussian2D
     bool write_fitted_data_file(const char* _file_name, const std::vector<double*>& _fitted_data);
+
+    bool write_double_array_to_file(const char* _file_name, const std::vector<double>& _array_data);
 
     // * Read mapping csv file
     // * Param: _file_name: csv file name
@@ -291,4 +294,12 @@ namespace SJUtil{
         }
         return _multiplied_data_vec;
     };
+
+    TH2D* get_2d_histogram(
+        const std::vector<Short_t>  &_x_vec,
+        const std::vector<Short_t>  &_y_vec,
+        const std::vector<Double_t> &_value_vec,
+        const char* _hist_name,
+        const char* _hist_title
+    );
 }

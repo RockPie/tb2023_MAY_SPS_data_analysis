@@ -13,7 +13,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 namespace SJPlot{
-    TH2F* distribution_2d(const std::vector<std::vector<Short_t>> &_events_charges, const char* _name, const char* _title);
+    TH2D* distribution_2d(const std::vector<std::vector<Short_t>> &_events_charges, const char* _name, const char* _title);
 
     TGraph2D* scatter_3d(
         const std::vector<Short_t> &_events_charges, 

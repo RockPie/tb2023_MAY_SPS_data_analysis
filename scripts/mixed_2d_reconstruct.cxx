@@ -44,19 +44,51 @@ int main(int argc, char* argv[]){
     builder->read_root_file2event_array(file_root_events_path);
     auto eventArrayPtr  = builder->get_event_array_ptr();
     auto eventValidPtr  = builder->get_event_valid_array_ptr();
-    auto eventNum       = int(eventArrayPtr->size()/100);
+    // auto eventNum       = int(eventArrayPtr->size()/100);
+    auto eventNum       = 20;
     auto eventNum_progress_divider = eventNum / 10;
 
     auto total_events       = 0;
     auto total_valid_events = 0;
     auto total_fit_success  = 0;
     auto fit_param_num      = 10;
-
-    auto rooGaus            = new RooGaussian*[fit_param_num];
     
     TFile *f = new TFile(file_root_results_path, "RECREATE");
 
-    std::vector<double*> _fit_result;
+    std::vector<Double_t> fit_integral;
+
+    RooRealVar x("x", "x", 0, 105);
+    RooRealVar y("y", "y", 0, 105);
+
+    RooRealVar mean1_x("mean_x", "mean_x", 52.5, 0, 105);
+    RooRealVar mean1_y("mean_y", "mean_y", 52.5, 0, 105);
+
+    RooRealVar sigma1_x("sigma_x", "sigma_x", 5, 0.1, 52.5);
+    RooRealVar sigma1_y("sigma_y", "sigma_y", 5, 0.1, 52.5);
+
+    RooRealVar mean2_x("mean2_x", "mean2_x", 52.5, 0, 105);
+    RooRealVar mean2_y("mean2_y", "mean2_y", 52.5, 0, 105);
+
+    RooRealVar sigma2_x("sigma2_x", "sigma2_x", 15, 0.1, 52.5);
+    RooRealVar sigma2_y("sigma2_y", "sigma2_y", 15, 0.1, 52.5);
+
+    RooRealVar amplitude2("amplitude2", "amplitude2", 0.7, 0.001, 0.999);
+
+    RooGaussian gauss1_x("gauss_x", "gauss_x", x, mean1_x, sigma1_x);
+    RooGaussian gauss1_y("gauss_y", "gauss_y", y, mean1_y, sigma1_y);
+
+    RooGaussian gauss2_x("gauss2_x", "gauss2_x", x, mean2_x, sigma2_x);
+    RooGaussian gauss2_y("gauss2_y", "gauss2_y", y, mean2_y, sigma2_y);
+
+    RooProdPdf gauss1_2d("gauss_2d", "gauss_2d", RooArgList(gauss1_x, gauss1_y));
+    RooProdPdf gauss2_2d("gauss2_2d", "gauss2_2d", RooArgList(gauss2_x, gauss2_y));
+
+    RooAddPdf double_gauss_2d("double_gauss_2d", "double_gauss_2d", RooArgList(gauss1_2d, gauss2_2d), amplitude2);
+
+    //* multi CPU fitting
+
+
+
     for (auto i = 0; i < eventNum; i++){
         total_events++;
         if (!eventValidPtr->at(i)) continue;
@@ -79,86 +111,83 @@ int main(int argc, char* argv[]){
         auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 10);
         auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
         auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
-        auto _twoD_values_NAM       = SJUtil::substitued_data(
+        auto _target_event       = SJUtil::substitued_data(
             _twoD_hg_values_NA, 
             _twoD_lg_values_NA,
             Double_t(1500),
             Double_t(1)
         );
-        // auto _twoD_hg_values_NSS = _twoD_hg_values_NS;
-
-        auto _target_event = _twoD_values_NAM;
+        // auto _target_event = _twoD_values_NAM;
 
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
             continue;
         total_valid_events++;
-        auto Graph_Ptr      = SJPlot::scatter_3d_raw( 
-            _target_event, _currentName, _currentTitle);
-        Graph_Ptr->SetMarkerColor(kBlue);
-        auto Graph_Sub_Ptr      = SJPlot::scatter_3d_raw( 
-            _twoD_lg_values_NA, _currentName, _currentTitle);
-        Graph_Sub_Ptr->SetMarkerColor(kRed);
-        Graph_Sub_Ptr->SetMarkerStyle(21);
 
-        //auto HG_Max_Value = SJUtil::map_max_point_index(_twoD_hg_values_NA)[2];
-        //auto LG_Max_Value = SJUtil::map_max_point_index(_twoD_lg_values_NA)[2];
-        // LOG(INFO) << HG_Max_Value << ", " << LG_Max_Value;
+        auto _hist_2d = SJUtil::get_2d_histogram(_target_event.x_vec, _target_event.y_vec, _target_event.value_vec, _currentName, _currentTitle);
+        
+        RooDataHist data("data", "data", RooArgList(x, y), _hist_2d);
 
-        // * Fit 
-        auto _initial_values = SJUtil::map_max_point_index( _target_event);
-        if (_initial_values == nullptr){
-            int _initial_values[3] = {50, 50, 4000};
-        }
-        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
-        gaussianFunc->SetParameters(
-            _initial_values[0], 
-            _initial_values[1], 
-            5, 5, 
-            _initial_values[0], 
-            _initial_values[1], 
-            20, 20, 
-            _initial_values[2],
-            _initial_values[2]/2
-        );
+        // set the initial values
+        mean1_x.setVal(52.5);
+        mean1_y.setVal(52.5);
+        sigma1_x.setVal(6);
+        sigma1_y.setVal(6);
+        mean2_x.setVal(52.5);
+        mean2_y.setVal(52.5);
+        sigma2_x.setVal(15);
+        sigma2_y.setVal(15);
+        amplitude2.setVal(0.7);
 
-        gaussianFunc->SetParNames("x_{mean}", "y_{mean}", "#sigma_{x}", "#sigma_{y}", "x_{mean}", "y_{mean}", "#sigma_{x}", "#sigma_{y}", "A_{1}", "A_{2}");
-        gaussianFunc->SetLineColor(kRed);
-        gaussianFunc->SetLineWidth(2);
-        gaussianFunc->SetFillColorAlpha(kBlue, 0.3);
-        auto fit_res = Graph_Ptr->Fit(gaussianFunc, "RQ");
-        if (fit_res != 0) {}
-            //LOG(WARNING) << "Fitting failed for event "<< i;
-        else {
+        // choose the fitting method
+        RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::SumW2Error(kTRUE));
+        // RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), SumW2Error(kTRUE));
+
+        // tell if the fit is valid
+        if (fit_result->status() == 0) {
             total_fit_success++;
-            // double* _temp_parameters = new double[fit_param_num + 3];
-            // for (auto i = 0; i < fit_param_num + 1; i++){
-            //     _temp_parameters[i] = gaussianFunc->GetParameter(i);
-            // }
-            // _temp_parameters[fit_param_num] = gaussianFunc->GetChisquare();
-            // _temp_parameters[fit_param_num + 1] = gaussianFunc->GetNDF();
-            // _temp_parameters[fit_param_num + 2] = double(i);
-            // _fit_result.push_back(_temp_parameters);
         }
-        Canvas_Ptr->cd();
-        Graph_Sub_Ptr->Draw("p");
-        Graph_Ptr->Draw("p same");
-        gaussianFunc->Draw("surf3 same");
-        // * Set the z axis range
-        Canvas_Ptr->Update();
-        Canvas_Ptr->WaitPrimitive();
-        Canvas_Ptr->Write();
-        delete Graph_Ptr;
-        delete Canvas_Ptr;
+
+        //! calculate the integral of the 2D gaussian
+        RooArgSet vars(x, y);
+        RooAbsReal *integral = double_gauss_2d.createIntegral(vars);
+        Double_t integral_value = integral->getVal();
+        fit_integral.push_back(integral_value);
+
+
+        // RooPlot *xframe = x.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
+        // data.plotOn(xframe);
+        // double_gauss_2d.plotOn(xframe);
+
+        // RooPlot *yframe = y.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
+        // data.plotOn(yframe);
+        // double_gauss_2d.plotOn(yframe);
+
+        // TCanvas *cx = new TCanvas("cx", "cx", 200, 10, 700, 500);
+        // xframe->Draw();
+        // cx->Write();
+        // cx->Close();
+
+        // TCanvas *cy = new TCanvas("cy", "cy", 200, 10, 700, 500);
+        // yframe->Draw();
+        // cy->Write();
+        // cy->Close();
+
+        // delete xframe;
+        // delete yframe;
     }
     LOG(INFO) << "Total expected events: "  << total_events;
     LOG(INFO) << "Total valid events: "     << total_valid_events;
-    LOG(INFO) << "Total fit success: "      << total_fit_success;
-    double _success_rate = double(total_fit_success) / double(total_valid_events);
-    LOG(INFO) << "Success rate: " << _success_rate*100 << "%";
+
     f->Close();
     delete builder;
+
+    SJUtil::write_double_array_to_file("../cachedFiles/Run_2806_Roofit_res.root", fit_integral);
+
     LOG(INFO) << "Finished fitting and plotting";
+    auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);
+    LOG(INFO) << "Fit success rate: " << success_rate*100 << "%";
     // SJUtil::write_fitted_data_file(file_mixed_fitting_path, _fit_result);
+
     return 0;
     }
 

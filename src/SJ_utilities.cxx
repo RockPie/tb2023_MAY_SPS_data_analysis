@@ -254,3 +254,78 @@ std::vector<std::vector<Double_t>> SJUtil::read_relative_gain_root_file(const ch
     _relative_gain_file->Close();
     return _relative_gain_array;
 }
+
+TH2D* SJUtil::get_2d_histogram(
+    const std::vector<Short_t>  &_x_vec,
+    const std::vector<Short_t>  &_y_vec,
+    const std::vector<Double_t> &_value_vec,
+    const char* _hist_name,
+    const char* _hist_title){
+
+    auto _hist_ptr = new TH2D(_hist_name, _hist_title, 105, 0, 105, 105, 0, 105);
+    // * Set each bin value according to the nearest point
+    for (auto i = 0; i < 105; i++)
+        for (auto j = 0; j < 105; j++){
+            auto _z = Double_t(INVALID_2D_VALUE);
+            auto _min_dist_x = 105;
+            auto _min_dist_y = 105;
+            if (i >= 35 && i < 70 && 
+                j >= 35 && j < 70){
+                //* Central module
+                for (auto k=0; k<_x_vec.size();k++)
+                    if (_x_vec[k] >= 35 && _x_vec[k] < 70 && 
+                        _y_vec[k] >= 35 && _y_vec[k] < 70 && _value_vec[k] != INVALID_2D_VALUE){
+                        auto _dist_x = abs(i+1-_x_vec[k]);
+                        auto _dist_y = abs(j-1-_y_vec[k]);
+                        if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
+                            _min_dist_x = _dist_x;
+                            _min_dist_y = _dist_y;
+                            _z = _value_vec[k] / 25.0;
+                        }
+                    }
+            }
+            else {
+                for (auto k=0; k<_x_vec.size();k++)
+                    if (((_x_vec[k] < 35 || _x_vec[k] >= 70) || 
+                         (_y_vec[k] < 35 || _y_vec[k] >= 70)) && _value_vec[k] != INVALID_2D_VALUE){
+                        auto _dist_x = abs(i-_x_vec[k]);
+                        auto _dist_y = abs(j-_y_vec[k]);
+                        if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
+                            _min_dist_x = _dist_x;
+                            _min_dist_y = _dist_y;
+                            _z = _value_vec[k] / 49.0;
+                        }
+                    }
+            }
+            _hist_ptr->SetBinContent(i+1, j+1, _z);
+        }
+    return _hist_ptr;
+}
+
+bool SJUtil::write_double_array_to_file(const char* _file_name, const std::vector<double>& _array_data){
+    if (_array_data.size() == 0) {
+        LOG(ERROR) << "Fitted data is invalid for saving";
+        return false;
+    }
+    if (strlen(_file_name) == 0) {
+        LOG(ERROR) << "File name is invalid for saving";
+        return false;
+    }
+
+    TFile* _array_data_file = new TFile(_file_name, "RECREATE");
+    TTree* _array_data_tree = new TTree("arrayTree", "array tree");
+
+    std::vector<double> _array_data_vec;
+
+    for (auto i = 0; i < _array_data.size(); i++)
+        _array_data_vec.push_back(_array_data[i]);
+
+    _array_data_tree->Branch("array_data", &_array_data_vec);
+
+    _array_data_tree->Fill();
+    _array_data_tree->Write();
+    _array_data_file->Close();
+
+
+    return true;
+}
