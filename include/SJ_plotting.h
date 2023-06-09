@@ -22,10 +22,34 @@ namespace SJPlot{
         const char* _title);
     TGraph2D* scatter_3d(const std::vector<Short_t> &_events_charges, const char* _name, const char* _title);
 
+    template <typename T>
     TGraph2D* scatter_3d_raw(
-        const SJUtil::DataSet2D<Short_t> &_mapped_events, 
+        const SJUtil::DataSet2D<T> &_mapped_events, 
         const char* _name, 
-        const char* _title);
+        const char* _title){
+        auto _graph_ptr = new TGraph2D();
+        _graph_ptr->SetMarkerStyle(20);
+        _graph_ptr->SetMarkerSize(1);
+        _graph_ptr->SetMarkerColor(kRed);
+
+        _graph_ptr->SetTitle(_title);
+        _graph_ptr->SetName(_name);
+
+        for (auto i = 0; i < _mapped_events.x_vec.size(); i++)
+            _graph_ptr->SetPoint(i, 
+                Double_t(_mapped_events.x_vec[i]),
+                Double_t(_mapped_events.y_vec[i]), 
+                Double_t(_mapped_events.value_vec[i]));
+
+        _graph_ptr->GetXaxis()->SetTitle("x");
+        _graph_ptr->GetYaxis()->SetTitle("y");
+        _graph_ptr->GetZaxis()->SetTitle("adc");
+
+        _graph_ptr->GetXaxis()->SetRangeUser(0, 105);
+        _graph_ptr->GetYaxis()->SetRangeUser(0, 105);
+        // _graph_ptr->Draw("pcol");
+        return _graph_ptr;
+    };
 
     TGraph2D* scatter_3d_double_raw(
         const SJUtil::DataSet2D<Short_t> &_mapped_events_0, 

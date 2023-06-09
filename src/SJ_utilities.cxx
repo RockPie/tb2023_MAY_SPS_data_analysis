@@ -201,3 +201,56 @@ bool SJUtil::write_fitted_data_file(const char* _file_name, const std::vector<do
     return true;
 }
 
+std::vector<std::vector<Double_t>> SJUtil::read_relative_gain_root_file(const char* _file_name){
+    std::vector<std::vector<Double_t>> _relative_gain_array;
+    std::vector<Double_t> _slope_array;
+    std::vector<Double_t> _offset_array;
+    if (strlen(_file_name) == 0) {
+        LOG(ERROR) << "File name is invalid for saving";
+        return _relative_gain_array;
+    }
+
+    // * Open root file
+    TFile* _relative_gain_file = new TFile(_file_name, "READ");
+    if (_relative_gain_file->IsZombie()) {
+        LOG(ERROR) << "File open error: " << _file_name;
+        return _relative_gain_array;
+    }
+
+    // * Get tree
+    TTree* _relative_gain_tree = (TTree*)_relative_gain_file->Get("slope_offset_tree");
+    if (_relative_gain_tree == nullptr) {
+        LOG(ERROR) << "Tree open error: " << "slope_offset_tree";
+        return _relative_gain_array;
+    }
+
+    // * Get branches
+    Double_t _slope;
+    Double_t _offset;
+    Double_t _slope_err;
+    Double_t _offset_err;
+
+    _relative_gain_tree->SetBranchAddress("slope", &_slope);
+    _relative_gain_tree->SetBranchAddress("offset", &_offset);
+    _relative_gain_tree->SetBranchAddress("slope_err", &_slope_err);
+    _relative_gain_tree->SetBranchAddress("offset_err", &_offset_err);
+
+    // * Get entries
+    auto _num_entries = _relative_gain_tree->GetEntries();
+
+    // * Get data
+    for (auto i = 0; i < _num_entries; i++){
+        _relative_gain_tree->GetEntry(i);
+        std::vector<Double_t> _relative_gain;
+        _slope_array.push_back(1/_slope);
+        _offset_array.push_back(-_offset/_slope);
+        //_relative_gain_array.push_back(_relative_gain);
+        // LOG(DEBUG) << "slope: " << 1/_slope << ", offset: " << -_offset/_slope << ", slope_err: " << _slope_err << ", offset_err: " << _offset_err;
+    }
+
+    _relative_gain_array.push_back(_slope_array);
+    _relative_gain_array.push_back(_offset_array);
+
+    _relative_gain_file->Close();
+    return _relative_gain_array;
+}

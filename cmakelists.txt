@@ -23,17 +23,22 @@ add_library(sketchprj1_lib SHARED
     include/SJ_includes.h
 )
 
-# * Change script name here to run different scripts
-# add_executable(sketchprj1_main ./scripts/sum_analysis.cxx)
-add_executable(sketchprj1_main ./scripts/Sketch1.cxx)
-
 target_link_libraries(sketchprj1_lib PUBLIC 
-    ROOT::Core 
+    ROOT::Core
     ROOT::Tree
     ROOT::Hist
     ROOT::Gpad
     ROOT::Graf3d
 )
 
-target_link_libraries(sketchprj1_main sketchprj1_lib)
+# * Change script name here to run different scripts
+add_executable(sum_analysis_main            ./scripts/sum_analysis.cxx)
+add_executable(Sketch1_main                 ./scripts/Sketch1.cxx)
+add_executable(chn_gain_calibr_main         ./scripts/chn_gain_calibr.cxx)
+add_executable(mixed_2d_reconstruct_main    ./scripts/mixed_2d_reconstruct.cxx)
+
+target_link_libraries(sum_analysis_main         sketchprj1_lib)
+target_link_libraries(Sketch1_main              sketchprj1_lib)
+target_link_libraries(chn_gain_calibr_main      sketchprj1_lib)
+target_link_libraries(mixed_2d_reconstruct_main sketchprj1_lib)
 

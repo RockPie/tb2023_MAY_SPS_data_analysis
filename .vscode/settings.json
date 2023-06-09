@@ -58,7 +58,8 @@
         "unordered_map": "cpp",
         "algorithm": "cpp",
         "iomanip": "cpp",
-        "read_hcal_tree.C": "cpp"
+        "read_hcal_tree.C": "cpp",
+        "read_hcal_tree2.C": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",

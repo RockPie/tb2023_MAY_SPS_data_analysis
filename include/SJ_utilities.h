@@ -267,5 +267,28 @@ namespace SJUtil{
         return _copy_hg_mapped_data;
     }
 
+    std::vector<std::vector<Double_t>> read_relative_gain_root_file(const char* _file_name);
 
+    template <typename T>
+    std::vector<Double_t> gain_multiplication(
+        const std::vector<Double_t> & _gain_vec,
+        const std::vector<Double_t> & _offset_vec,
+        const std::vector<T> & _data_vec){
+        std::vector<Double_t> _multiplied_data_vec;
+        auto _gain_vec_length = _gain_vec.size();
+        auto _offset_vec_length = _offset_vec.size();
+        auto _multiplication_vec_length = _data_vec.size();
+        if (_gain_vec_length != _multiplication_vec_length){
+            LOG(ERROR) << "Gain vector length (" << _gain_vec_length << ") is not equal to multiplication vector length (" << _multiplication_vec_length << ")";
+            return _multiplied_data_vec;
+        }
+        if (_offset_vec_length != _multiplication_vec_length){
+            LOG(ERROR) << "Offset vector length (" << _offset_vec_length << ") is not equal to multiplication vector length (" << _multiplication_vec_length << ")";
+            return _multiplied_data_vec;
+        }
+        for (auto i=0; i<_multiplication_vec_length; i++){
+            _multiplied_data_vec.push_back(_gain_vec[i] * Double_t(_data_vec[i]) + _offset_vec[i]);
+        }
+        return _multiplied_data_vec;
+    };
 }
