@@ -14,8 +14,15 @@
 #include <TLatex.h>
 #include <TVector.h>
 #include <TMultiGraph.h>
+// for multi-threading
+#include <TThread.h>
+// for TThreadData
+#include <TROOT.h>
 // for product of two pdfs
 #include <RooProdPdf.h>
 // for gStyle
 #include <TStyle.h>
 #include <TF2.h>
+
+// for getopt
+#include <unistd.h>

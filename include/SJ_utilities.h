@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define INVALID_2D_VALUE            -1
+#define INVALID_2D_VALUE            0
 #define INVALID_1D_VALUE            -1
 // #define ENABLE_WARNING
 

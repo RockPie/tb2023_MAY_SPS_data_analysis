@@ -274,28 +274,45 @@ TH2D* SJUtil::get_2d_histogram(
                 //* Central module
                 for (auto k=0; k<_x_vec.size();k++)
                     if (_x_vec[k] >= 35 && _x_vec[k] < 70 && 
-                        _y_vec[k] >= 35 && _y_vec[k] < 70 && _value_vec[k] != INVALID_2D_VALUE){
+                        _y_vec[k] >= 35 && _y_vec[k] < 70){
+                        if (_x_vec[k] == 37 && _y_vec[k] == 37){
+                            LOG(WARNING) << "37, 37 point is found";
+                        }
                         auto _dist_x = abs(i+1-_x_vec[k]);
                         auto _dist_y = abs(j-1-_y_vec[k]);
                         if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
                             _min_dist_x = _dist_x;
                             _min_dist_y = _dist_y;
-                            _z = _value_vec[k] / 25.0;
+                            if (_value_vec[k] == INVALID_2D_VALUE)
+                                _z = Double_t(INVALID_2D_VALUE);
+                            else
+                                _z = _value_vec[k] / 25.0;
                         }
+                    }
+                    if (_min_dist_x > 2 || _min_dist_y > 2){
+                        LOG(INFO) << "x: " << i << ", y: " << j << ", z: " << _z << ", min_dist_x: " << _min_dist_x << ", min_dist_y: " << _min_dist_y;
+                        _z = Double_t(INVALID_2D_VALUE);
                     }
             }
             else {
                 for (auto k=0; k<_x_vec.size();k++)
                     if (((_x_vec[k] < 35 || _x_vec[k] >= 70) || 
-                         (_y_vec[k] < 35 || _y_vec[k] >= 70)) && _value_vec[k] != INVALID_2D_VALUE){
+                         (_y_vec[k] < 35 || _y_vec[k] >= 70))){
                         auto _dist_x = abs(i-_x_vec[k]);
                         auto _dist_y = abs(j-_y_vec[k]);
                         if (_dist_x <= _min_dist_x && _dist_y<=_min_dist_y){
                             _min_dist_x = _dist_x;
                             _min_dist_y = _dist_y;
-                            _z = _value_vec[k] / 49.0;
+                            if (_value_vec[k] == INVALID_2D_VALUE)
+                                _z = Double_t(INVALID_2D_VALUE);
+                            else
+                                _z = _value_vec[k] / 49.0;
                         }
                     }
+                if (_min_dist_x > 3 || _min_dist_y > 3){
+                    LOG(INFO) << "x: " << i << ", y: " << j << ", z: " << _z << ", min_dist_x: " << _min_dist_x << ", min_dist_y: " << _min_dist_y;
+                    _z = Double_t(INVALID_2D_VALUE);
+                }
             }
             _hist_ptr->SetBinContent(i+1, j+1, _z);
         }

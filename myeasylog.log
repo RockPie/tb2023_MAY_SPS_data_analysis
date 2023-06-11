@@ -1,0 +1,30 @@
+2023-06-10 22:49:46,667 INFO [default] Job index: 1
+22:49:46[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:46[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:47,066 INFO [default] Job index: 2
+22:49:47[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:47[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:47,377 INFO [default] Job index: 3
+22:49:47[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:47[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:47,682 INFO [default] Job index: 4
+22:49:47[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:47[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:47,986 INFO [default] Job index: 5
+22:49:47[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:47[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:48,291 INFO [default] Job index: 6
+22:49:48[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:48[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:48,594 INFO [default] Job index: 7
+22:49:48[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:48[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:48,906 INFO [default] Job index: 8
+22:49:48[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:48[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:49,214 INFO [default] Job index: 9
+22:49:49[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:49[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
+2023-06-10 22:49:49,515 INFO [default] Job index: 10
+22:49:49[[1;34mI[0m] (SJ_utilities.cxx) Reading mapping file: ../dataFiles/Mapping_tb2023SPS.csv
+22:49:49[[1;31mE[0m] (SJ_utilities.cxx) File not found: ../dataFiles/Mapping_tb2023SPS.csv
