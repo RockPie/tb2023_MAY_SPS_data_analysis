@@ -6,6 +6,31 @@ void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
+    // * -n 1 - 10: index of this job
+    // analyse input arguments
+    int opt;
+    int job_index   = 0; // -n 1 - 10: index of this job
+    int job_num     = 10; // -t 1 - 10: total number of jobs
+    int eventNum    = 10; // -e 1 - 1000: number of events to be processed
+
+    while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
+        switch (opt){
+            case 'n':
+                job_index = atoi(optarg);
+                break;
+            case 't':
+                job_num = atoi(optarg);
+                break;
+            case 'e':
+                eventNum = atoi(optarg);
+                break;
+            default:
+                LOG(ERROR) << "Wrong arguments!";
+                return 1;
+        }
+    }
+
+
     set_easylogger();   // * set easylogging++ configurations
     int run_number = 2806;
 
@@ -45,7 +70,6 @@ int main(int argc, char* argv[]){
     auto eventArrayPtr  = builder->get_event_array_ptr();
     auto eventValidPtr  = builder->get_event_valid_array_ptr();
     // auto eventNum       = int(eventArrayPtr->size()/100);
-    auto eventNum       = 20;
     auto eventNum_progress_divider = eventNum / 10;
 
     auto total_events       = 0;
@@ -56,6 +80,8 @@ int main(int argc, char* argv[]){
     TFile *f = new TFile(file_root_results_path, "RECREATE");
 
     std::vector<Double_t> fit_integral;
+    std::vector<Double_t> fit_chi2;
+    std::vector<Double_t> fit_ndf;
 
     RooRealVar x("x", "x", 0, 105);
     RooRealVar y("y", "y", 0, 105);
@@ -87,9 +113,14 @@ int main(int argc, char* argv[]){
 
     //* multi CPU fitting
 
+    auto first_event = 0;
 
+    if (job_index != 0){
+        first_event = int(eventNum / job_num * job_index);
+        eventNum = int(eventNum / job_num * (job_index + 1));
+    }
 
-    for (auto i = 0; i < eventNum; i++){
+    for (auto i = first_event; i < eventNum; i++){
         total_events++;
         if (!eventValidPtr->at(i)) continue;
         if (i % eventNum_progress_divider == 0)
@@ -98,8 +129,8 @@ int main(int argc, char* argv[]){
         auto LG_charges     = eventArrayPtr->at(i).LG_charges;
         auto _currentName   = Form("event_%d", i);
         auto _currentTitle  = Form("Event %d", i);
-        auto Canvas_Ptr     = new TCanvas(
-            _currentName, _currentTitle, 200, 10, 700, 500);
+        //auto Canvas_Ptr     = new TCanvas(
+        //    _currentName, _currentTitle, 200, 10, 700, 500);
         
         std::vector<Double_t> HG_charges_double;
         for (auto i = 0; i < HG_charges.size(); i++)
@@ -107,13 +138,13 @@ int main(int argc, char* argv[]){
         auto LG_charges_Multipled   = SJUtil::gain_multiplication(slopeInfo, offsetInfo, LG_charges);
         auto _twoD_hg_values        = SJUtil::map1d_to_2d(HG_charges_double, mapping_coords);
         auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, mapping_coords);
-        auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 10);
-        auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 10);
-        auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
-        auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
+        // auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 10);
+        // auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 10);
+        // auto _twoD_hg_values_A     = SJUtil::area_normalized_data(_twoD_hg_values);
+        // auto _twoD_lg_values_A     = SJUtil::area_normalized_data(_twoD_lg_values);
         auto _target_event       = SJUtil::substitued_data(
-            _twoD_hg_values_NA, 
-            _twoD_lg_values_NA,
+            _twoD_hg_values, 
+            _twoD_lg_values,
             Double_t(1500),
             Double_t(1)
         );
@@ -123,7 +154,14 @@ int main(int argc, char* argv[]){
             continue;
         total_valid_events++;
 
+        LOG(INFO) << "Fitting event " << i;
         auto _hist_2d = SJUtil::get_2d_histogram(_target_event.x_vec, _target_event.y_vec, _target_event.value_vec, _currentName, _currentTitle);
+        // TCanvas *c1 = new TCanvas("c1", "c1", 200, 10, 700, 500);
+        // _hist_2d->Draw("colz");
+        // c1->Update();
+        // c1->Write();
+        // delete c1;
+        
         
         RooDataHist data("data", "data", RooArgList(x, y), _hist_2d);
 
@@ -139,7 +177,13 @@ int main(int argc, char* argv[]){
         amplitude2.setVal(0.7);
 
         // choose the fitting method
-        RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::SumW2Error(kTRUE));
+        // * Speed up the fitting by using the Hesse matrix
+        // * Further speed up the fitting by using the Optimize and NumCPU
+
+
+        RooFitResult *fit_result = double_gauss_2d.chi2FitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize());
+        // use multi-thread fitting for 10 core CPU
+        // RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(false), RooFit::PrintLevel(-1), RooFit::SumW2Error(kTRUE), RooFit::NumCPU(10));
         // RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), SumW2Error(kTRUE));
 
         // tell if the fit is valid
@@ -147,11 +191,20 @@ int main(int argc, char* argv[]){
             total_fit_success++;
         }
 
-        //! calculate the integral of the 2D gaussian
+        // //! calculate the integral of the 2D gaussian
         RooArgSet vars(x, y);
         RooAbsReal *integral = double_gauss_2d.createIntegral(vars);
         Double_t integral_value = integral->getVal();
         fit_integral.push_back(integral_value);
+
+        // get chi2
+        Double_t chi2 = double_gauss_2d.createChi2(data)->getVal();
+        fit_chi2.push_back(chi2);
+        //LOG(INFO) << "Chi2: " << chi2;
+        // get ndf
+        Int_t ndf = data.numEntries() - double_gauss_2d.getParameters(data)->selectByAttrib("Constant", kTRUE)->getSize();
+        fit_ndf.push_back(ndf);
+        //LOG(INFO) << "NDF: " << ndf;
 
 
         // RooPlot *xframe = x.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
@@ -174,6 +227,11 @@ int main(int argc, char* argv[]){
 
         // delete xframe;
         // delete yframe;
+
+        // delete in-loop variables
+        delete integral;
+        delete fit_result;
+        delete _hist_2d;
     }
     LOG(INFO) << "Total expected events: "  << total_events;
     LOG(INFO) << "Total valid events: "     << total_valid_events;
@@ -181,7 +239,23 @@ int main(int argc, char* argv[]){
     f->Close();
     delete builder;
 
-    SJUtil::write_double_array_to_file("../cachedFiles/Run_2806_Roofit_res.root", fit_integral);
+    if (job_index != 0){
+        auto _save_file_name = "../cachedFiles/Run_2806_Roofit_res_" + std::to_string(job_index) + ".root";
+        SJUtil::write_double_array_to_file(_save_file_name.c_str(), fit_integral);
+        auto _save_file_name1 = "../cachedFiles/Run_2806_Roochi2_res_" + std::to_string(job_index) + ".root";
+        SJUtil::write_double_array_to_file(_save_file_name1.c_str(), fit_chi2);
+        auto _save_file_name2 = "../cachedFiles/Run_2806_Roondf_res_" + std::to_string(job_index) + ".root";
+        SJUtil::write_double_array_to_file(_save_file_name2.c_str(), fit_ndf);
+    }
+    else {
+        auto _save_file_name = "../cachedFiles/Run_2806_Roofit_res.root";
+        SJUtil::write_double_array_to_file(_save_file_name, fit_integral);
+        auto _save_file_name1 = "../cachedFiles/Run_2806_Roochi2_res.root";
+        SJUtil::write_double_array_to_file(_save_file_name1, fit_chi2);
+        auto _save_file_name2 = "../cachedFiles/Run_2806_Roondf_res.root";
+        SJUtil::write_double_array_to_file(_save_file_name2, fit_ndf);
+    }
+    
 
     LOG(INFO) << "Finished fitting and plotting";
     auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);
