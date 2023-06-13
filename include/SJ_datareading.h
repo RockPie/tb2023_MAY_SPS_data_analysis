@@ -19,7 +19,7 @@
 #include <stdexcept>    // for std::stio
 #include <optional>     // for std::optional
 #include <vector>       // for std::vector
-#include <TFile.h>      // for root file writing/reading
+#include <TFile.h>      // for creating root file
 #include <TTree.h>      // for creating root tree
 #include "easylogging++.h"  // for logging
 

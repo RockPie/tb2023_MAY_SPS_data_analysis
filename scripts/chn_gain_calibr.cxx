@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
     auto mapping        = SJUtil::read_mapping_csv_file(file_mapping_path);
     auto mapping_coords = SJUtil::generate_mapping_croodinate(mapping);
     auto pedestalInfo   = SJUtil::read_pedestal_csv_file(file_pedestal_path);
-
+    
     // * My analysis
     auto builder        = new CAEN_event_builder();
     builder->read_root_file2event_array(file_root_events_path);

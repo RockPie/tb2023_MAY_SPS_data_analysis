@@ -1,7 +1,5 @@
 #include "SJ_includes.h"
 
-// TODO: Fix cmakelists.txt with correct project name
-
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
@@ -29,7 +27,6 @@ int main(int argc, char* argv[]){
                 return 1;
         }
     }
-
 
     set_easylogger();   // * set easylogging++ configurations
     int run_number = 2806;
@@ -156,12 +153,11 @@ int main(int argc, char* argv[]){
 
         LOG(INFO) << "Fitting event " << i;
         auto _hist_2d = SJUtil::get_2d_histogram(_target_event.x_vec, _target_event.y_vec, _target_event.value_vec, _currentName, _currentTitle);
-        // TCanvas *c1 = new TCanvas("c1", "c1", 200, 10, 700, 500);
-        // _hist_2d->Draw("colz");
-        // c1->Update();
-        // c1->Write();
-        // delete c1;
-        
+        TCanvas *c1 = new TCanvas("c1", "c1", 200, 10, 700, 500);
+        _hist_2d->Draw("colz");
+        c1->Update();
+        c1->Write();
+        delete c1;
         
         RooDataHist data("data", "data", RooArgList(x, y), _hist_2d);
 
@@ -180,19 +176,21 @@ int main(int argc, char* argv[]){
         // * Speed up the fitting by using the Hesse matrix
         // * Further speed up the fitting by using the Optimize and NumCPU
 
-
         RooFitResult *fit_result = double_gauss_2d.chi2FitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize());
         // use multi-thread fitting for 10 core CPU
         // RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(false), RooFit::PrintLevel(-1), RooFit::SumW2Error(kTRUE), RooFit::NumCPU(10));
         // RooFitResult *fit_result = double_gauss_2d.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), SumW2Error(kTRUE));
 
         // tell if the fit is valid
-        if (fit_result->status() == 0) {
+        if (fit_result->status() == 0)
             total_fit_success++;
-        }
 
         // //! calculate the integral of the 2D gaussian
         RooArgSet vars(x, y);
+
+        // get fit results
+        
+
         RooAbsReal *integral = double_gauss_2d.createIntegral(vars);
         Double_t integral_value = integral->getVal();
         fit_integral.push_back(integral_value);
@@ -206,29 +204,30 @@ int main(int argc, char* argv[]){
         fit_ndf.push_back(ndf);
         //LOG(INFO) << "NDF: " << ndf;
 
+        RooPlot *xframe = x.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
+        data.plotOn(xframe);
+        double_gauss_2d.plotOn(xframe);
 
-        // RooPlot *xframe = x.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
-        // data.plotOn(xframe);
-        // double_gauss_2d.plotOn(xframe);
+        RooPlot *yframe = y.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
+        data.plotOn(yframe);
+        double_gauss_2d.plotOn(yframe);
 
-        // RooPlot *yframe = y.frame(RooFit::Title("2D Gaussian Fit"), RooFit::Bins(105));
-        // data.plotOn(yframe);
-        // double_gauss_2d.plotOn(yframe);
+        TCanvas *cx = new TCanvas("cx", "cx", 200, 10, 700, 500);
+        xframe->Draw();
+        // add grid
+        cx->SetGrid();
+        cx->Write();
+        cx->Close();
 
-        // TCanvas *cx = new TCanvas("cx", "cx", 200, 10, 700, 500);
-        // xframe->Draw();
-        // cx->Write();
-        // cx->Close();
+        TCanvas *cy = new TCanvas("cy", "cy", 200, 10, 700, 500);
+        yframe->Draw();
+        cy->SetGrid();
+        cy->Write();
+        cy->Close();
 
-        // TCanvas *cy = new TCanvas("cy", "cy", 200, 10, 700, 500);
-        // yframe->Draw();
-        // cy->Write();
-        // cy->Close();
+        delete xframe;
+        delete yframe;
 
-        // delete xframe;
-        // delete yframe;
-
-        // delete in-loop variables
         delete integral;
         delete fit_result;
         delete _hist_2d;
