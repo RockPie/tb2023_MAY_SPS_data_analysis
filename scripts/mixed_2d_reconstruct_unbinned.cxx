@@ -9,7 +9,7 @@ int main(int argc, char* argv[]){
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
-    int eventNum    = 100; // -e 1 - 1000: number of events to be processed
+    int eventNum    = 200; // -e 1 - 1000: number of events to be processed
 
     while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
         switch (opt){
@@ -133,13 +133,36 @@ int main(int argc, char* argv[]){
         Graph_Sub_Ptr->SetMarkerStyle(21);
 
         // LOG(INFO) << "Fitting event " << i;
-        
+        auto initial_params = SJUtil::map_max_point_index(_target_event);
+        auto main_gaussian_initial_amp = initial_params[2] * 0.85;
+        auto sub_gaussian_initial_amp = initial_params[2] * 0.15;
+        auto main_gaussian_initial_x0 = initial_params[0];
+        auto main_gaussian_initial_y0 = initial_params[1];
+        auto sub_gaussian_initial_x0 = initial_params[0];
+        auto sub_gaussian_initial_y0 = initial_params[1];
+        // LOG(DEBUG) << "main_gaussian_initial_amp: " << main_gaussian_initial_amp;
+        // LOG(DEBUG) << "sub_gaussian_initial_amp: " << sub_gaussian_initial_amp;
+        // LOG(DEBUG) << "main_gaussian_initial_x0: " << main_gaussian_initial_x0;
+        // LOG(DEBUG) << "main_gaussian_initial_y0: " << main_gaussian_initial_y0;
+        // LOG(DEBUG) << "sub_gaussian_initial_x0: " << sub_gaussian_initial_x0;
+        // LOG(DEBUG) << "sub_gaussian_initial_y0: " << sub_gaussian_initial_y0;
         TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
         gaussianFunc->SetParameters(
-            52.5, 52.5, 5, 5,
-            52.5, 52.5, 15, 15,
-            4096, 512
+            main_gaussian_initial_x0, main_gaussian_initial_y0, 3, 3,
+            sub_gaussian_initial_x0, sub_gaussian_initial_y0, 8, 8,
+            main_gaussian_initial_amp, sub_gaussian_initial_amp
         );
+
+        gaussianFunc->SetParLimits(0, 0, 105);
+        gaussianFunc->SetParLimits(1, 0, 105);
+        gaussianFunc->SetParLimits(2, 0, 50);
+        gaussianFunc->SetParLimits(3, 0, 50);
+        gaussianFunc->SetParLimits(4, 0, 105);
+        gaussianFunc->SetParLimits(5, 0, 105);
+        gaussianFunc->SetParLimits(6, 0, 50);
+        gaussianFunc->SetParLimits(7, 0, 50);
+        gaussianFunc->SetParLimits(8, 0, 1e6);
+        gaussianFunc->SetParLimits(9, 0, 1e6);
 
         gaussianFunc->SetParNames(
             "x0_1", "y0_1", "sigma_x_1", "sigma_y_1",
@@ -168,12 +191,14 @@ int main(int argc, char* argv[]){
             chi2 = gaussianFunc->GetChisquare();
             ndf = gaussianFunc->GetNDF();
             chi2_ndf.push_back(chi2 / ndf);
-            if (true){
-                LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
+        }
+        else {
+            if (false){
+                // LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
                 Canvas_Ptr->cd();
                 Graph_Sub_Ptr->Draw("p");
                 Graph_Ptr->Draw("p same");
-                gaussianFunc->Draw("surf3 same");
+                // gaussianFunc->Draw("surf3 same");
                 Canvas_Ptr->Update();
                 Canvas_Ptr->WaitPrimitive();
                 Canvas_Ptr->Write();

@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     auto file_unbinned_file5 = "../cachedFiles/Run_2806_fit_result_5.root";
     auto file_unbinned_file6 = "../cachedFiles/Run_2806_fit_result_6.root";
     auto file_unbinned_file7 = "../cachedFiles/Run_2806_fit_result_7.root";
-    // auto file_unbinned_file8 = "../cachedFiles/Run_2806_fit_result_8.root";
+    //auto file_unbinned_file8 = "../cachedFiles/Run_2806_fit_result_8.root";
 
     auto file_chi2_file1 = "../cachedFiles/Run_2806_chi2_ndf_1.root";
     auto file_chi2_file2 = "../cachedFiles/Run_2806_chi2_ndf_2.root";
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
     auto file_chi2_file5 = "../cachedFiles/Run_2806_chi2_ndf_5.root";
     auto file_chi2_file6 = "../cachedFiles/Run_2806_chi2_ndf_6.root";
     auto file_chi2_file7 = "../cachedFiles/Run_2806_chi2_ndf_7.root";
-    // auto file_chi2_file8 = "../cachedFiles/Run_2806_chi2_ndf_8.root";
+    //auto file_chi2_file8 = "../cachedFiles/Run_2806_chi2_ndf_8.root";
 
     TFile *f1 = new TFile(file_unbinned_file1);
     TFile *f2 = new TFile(file_unbinned_file2);
@@ -197,48 +197,59 @@ int main(int argc, char* argv[]){
     //         total_events_passed ++;
     //     }
     // }
-    
+    gStyle->SetCanvasColor(0);
+    gStyle->SetFrameFillColor(0);
+    gStyle->SetStatColor(0);
+
     TH1D *h = new TH1D("h", "h", 200, 0, xMax_integrated);
     for (int i = 0; i < res_assembly.size(); i++){
         h->Fill(res_assembly.at(i)/25);
     }
 
-    TCanvas *c = new TCanvas("c", "c", 800, 600);
-    h->SetTitle("Integrated charge distribution");
+    TCanvas *c = new TCanvas("c", "c", 1200, 900);
+    // h->SetTitle("Integrated charge distribution");
+    h->SetTitle("Amplitude distribution");
     h->GetXaxis()->SetTitle("Integrated charge [ADC]");
     h->GetXaxis()->SetTitle("Amplitude [ADC]");
     h->GetYaxis()->SetTitle("Normalized count");
     h->Scale(1.0/h->Integral());
     h->GetXaxis()->SetRangeUser(0, xMax_integrated);
-    h->SetLineWidth(2);
-    h->SetLineStyle(2);
+    h->SetLineWidth(3);
+    h->SetLineStyle(1);
     h->SetStats(1);
     // fit with a 1-d gaussian
     auto gaus = new TF1("gaus", "gaus", 27000, 50000);
     h->Fit(gaus, "R");
     gaus->SetLineColor(kRed);
-    gaus->SetLineWidth(2);
+    gaus->SetLineWidth(3);
     gaus->SetLineStyle(2);
+
+
+
 
     // get results
     auto mean = gaus->GetParameter(1);
     auto sigma = gaus->GetParameter(2);
     auto mean_err = gaus->GetParError(1);
     auto sigma_err = gaus->GetParError(2);
+    auto resolution = sigma * 100.0 /mean;
     // h->Draw("p");
     h->Draw("p");
     gaus->Draw("same");
+    gPad -> Update();
 
     // show results on plot
     auto text = new TLatex();
     text->SetNDC();
     text->SetTextFont(43);
-    text->SetTextSize(20);
+    text->SetTextSize(30);
     text->SetTextColor(kRed);
-    text->DrawLatex(0.6, 0.7, Form("#mu = %.2f #pm %.2f", mean, mean_err));
-    text->DrawLatex(0.6, 0.65, Form("#sigma = %.2f #pm %.2f", sigma, sigma_err));
+    text->DrawLatex(0.6, 0.7, Form("mu = %.2f #pm %.2f", mean, mean_err));
+    text->DrawLatex(0.6, 0.65, Form("sigma = %.2f #pm %.2f", sigma, sigma_err));
+    text->DrawLatex(0.6, 0.6, Form("Resolution = %.2f %%", resolution));
     // Transparent background
     c->SetGrid();
+
     c->SaveAs("../pics/unbinned_fit_res.png");
 
     LOG(INFO) << "Total events: " << total_events;
