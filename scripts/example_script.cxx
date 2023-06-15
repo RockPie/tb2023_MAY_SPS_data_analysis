@@ -1,7 +1,5 @@
 #include "SJ_includes.h"
 
-// TODO: Fix cmakelists.txt with correct project name
-
 void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
