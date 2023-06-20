@@ -9,7 +9,8 @@ int main(int argc, char* argv[]){
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
-    int eventNum    = 200; // -e 1 - 1000: number of events to be processed
+    const int orginal_eventNum = 200;
+    int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
     while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
         switch (opt){
@@ -27,6 +28,8 @@ int main(int argc, char* argv[]){
                 return 1;
         }
     }
+
+    bool is_in_parallel = eventNum != orginal_eventNum;
 
     set_easylogger();   // * set easylogging++ configurations
     int run_number = 2806;
@@ -80,14 +83,16 @@ int main(int argc, char* argv[]){
     std::vector<Double_t> fit_amp1;
     std::vector<Double_t> fit_amp2;
     std::vector<Double_t> chi2_ndf;
+    std::vector<Double_t> max_chn_value;
+    std::vector<Double_t> chn_sum;
 
     //* multi CPU fitting
 
     auto first_event = 0;
 
     if (job_index != 0){
-        first_event = int(eventNum / job_num * job_index);
-        eventNum = int(eventNum / job_num * (job_index + 1));
+        first_event = int(eventNum / job_num * (job_index-1));
+        eventNum = int(eventNum / job_num * job_index);
     }
 
     for (auto i = first_event; i < eventNum; i++){
@@ -116,13 +121,18 @@ int main(int argc, char* argv[]){
         auto _target_event          = SJUtil::substitued_data(
             _twoD_hg_values_NA, 
             _twoD_lg_values_NA,
-            Double_t(1500),
+            Double_t(4000),
             Double_t(1)
         );
         // auto _target_event = _twoD_hg_values_NA;
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
             continue;
         total_valid_events++;
+
+        auto value_vec = _target_event.value_vec;
+        double sum = 0;
+        for (auto i = 0; i < value_vec.size(); i++)
+            sum += double(value_vec[i]);
 
         auto Graph_Ptr      = SJPlot::scatter_3d_raw( 
             _target_event, _currentName, _currentTitle);
@@ -132,20 +142,15 @@ int main(int argc, char* argv[]){
         Graph_Sub_Ptr->SetMarkerColor(kRed);
         Graph_Sub_Ptr->SetMarkerStyle(21);
 
-        // LOG(INFO) << "Fitting event " << i;
+        // * Getting initial parameters
         auto initial_params = SJUtil::map_max_point_index(_target_event);
         auto main_gaussian_initial_amp = initial_params[2] * 0.85;
-        auto sub_gaussian_initial_amp = initial_params[2] * 0.15;
-        auto main_gaussian_initial_x0 = initial_params[0];
-        auto main_gaussian_initial_y0 = initial_params[1];
-        auto sub_gaussian_initial_x0 = initial_params[0];
-        auto sub_gaussian_initial_y0 = initial_params[1];
-        // LOG(DEBUG) << "main_gaussian_initial_amp: " << main_gaussian_initial_amp;
-        // LOG(DEBUG) << "sub_gaussian_initial_amp: " << sub_gaussian_initial_amp;
-        // LOG(DEBUG) << "main_gaussian_initial_x0: " << main_gaussian_initial_x0;
-        // LOG(DEBUG) << "main_gaussian_initial_y0: " << main_gaussian_initial_y0;
-        // LOG(DEBUG) << "sub_gaussian_initial_x0: " << sub_gaussian_initial_x0;
-        // LOG(DEBUG) << "sub_gaussian_initial_y0: " << sub_gaussian_initial_y0;
+        auto sub_gaussian_initial_amp  = initial_params[2] * 0.15;
+        auto main_gaussian_initial_x0  = initial_params[0];
+        auto main_gaussian_initial_y0  = initial_params[1];
+        auto sub_gaussian_initial_x0   = initial_params[0];
+        auto sub_gaussian_initial_y0   = initial_params[1];
+
         TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
         gaussianFunc->SetParameters(
             main_gaussian_initial_x0, main_gaussian_initial_y0, 3, 3,
@@ -191,9 +196,11 @@ int main(int argc, char* argv[]){
             chi2 = gaussianFunc->GetChisquare();
             ndf = gaussianFunc->GetNDF();
             chi2_ndf.push_back(chi2 / ndf);
+            max_chn_value.push_back(initial_params[2]);
+            chn_sum.push_back(sum);
         }
         else {
-            if (false){
+            if (false && !is_in_parallel){
                 // LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
                 Canvas_Ptr->cd();
                 Graph_Sub_Ptr->Draw("p");
@@ -205,12 +212,8 @@ int main(int argc, char* argv[]){
             }
         }
         
-        
-        // * Set the z axis range
-        
         delete Graph_Ptr;
         delete Canvas_Ptr;
-
     }
     LOG(INFO) << "Total expected events: "  << total_events;
     LOG(INFO) << "Total valid events: "     << total_valid_events;
@@ -218,28 +221,31 @@ int main(int argc, char* argv[]){
 
     f->Close();
     delete builder;
-
-    if (job_index != 0){
+    TFile *_save_file;
+    if (job_index != 0){        
         auto _save_file_name = "../cachedFiles/Run_2806_fit_result_" + std::to_string(job_index) + ".root";
-        SJUtil::write_double_array_to_file(_save_file_name.c_str(), fit_integral);
-        auto _save_file_name1 = "../cachedFiles/Run_2806_amp1_result_" + std::to_string(job_index) + ".root";
-        SJUtil::write_double_array_to_file(_save_file_name1.c_str(), fit_amp1);
-        auto _save_file_name2 = "../cachedFiles/Run_2806_amp2_result_" + std::to_string(job_index) + ".root";
-        SJUtil::write_double_array_to_file(_save_file_name2.c_str(), fit_amp2);
-        auto _save_file_name3 = "../cachedFiles/Run_2806_chi2_ndf_" + std::to_string(job_index) + ".root";
-        SJUtil::write_double_array_to_file(_save_file_name3.c_str(), chi2_ndf);
+        _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
     else {
         auto _save_file_name = "../cachedFiles/Run_2806_fit_result.root";
-        SJUtil::write_double_array_to_file(_save_file_name, fit_integral);
-        auto _save_file_name1 = "../cachedFiles/Run_2806_amp1_result.root";
-        SJUtil::write_double_array_to_file(_save_file_name1, fit_amp1);
-        auto _save_file_name2 = "../cachedFiles/Run_2806_amp2_result.root";
-        SJUtil::write_double_array_to_file(_save_file_name2, fit_amp2);
-        auto _save_file_name3 = "../cachedFiles/Run_2806_chi2_ndf.root";
-        SJUtil::write_double_array_to_file(_save_file_name3, chi2_ndf);
+        _save_file = new TFile(_save_file_name, "RECREATE");
     }
+
     
+    // * Write all vector<double>
+    TTree *tree = new TTree("fittree", "Fit Tree");
+    tree->Branch("fit_integral", &fit_integral);
+    tree->Branch("fit_amp1", &fit_amp1);
+    tree->Branch("fit_amp2", &fit_amp2);
+    tree->Branch("chi2_ndf", &chi2_ndf);
+    tree->Branch("max_chn_value", &max_chn_value);
+    tree->Branch("chn_sum", &chn_sum);
+    tree->Fill();
+
+    tree->Write();
+    _save_file->Close();
+
+
 
     LOG(INFO) << "Finished fitting and plotting";
     auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);

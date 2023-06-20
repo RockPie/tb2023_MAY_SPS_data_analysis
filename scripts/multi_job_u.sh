@@ -8,7 +8,7 @@ max_processes=8
 
 # Function to execute the command
 execute_command() {
-    ../build/mixed_2d_reconstruct_unbinned_main -n $1 -t 8 -e 80000
+    ../build/mixed_2d_reconstruct_unbinned_main -n $1 -t 8 -e 20000
 }
 
 # Export the function so it can be called by xargs

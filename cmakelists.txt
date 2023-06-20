@@ -13,6 +13,7 @@ find_package(ROOT REQUIRED COMPONENTS
     RIO
     RooFitCore
     RooFit
+    Graf
     # for TTreadData
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -39,6 +40,8 @@ target_link_libraries(sketchprj1_lib PUBLIC
     # for TFile
     ROOT::RIO
     ROOT::Thread
+    # for TScatter
+    ROOT::Graf
 )
 
 # * Change script name here to run different scripts
@@ -49,6 +52,7 @@ add_executable(mixed_2d_reconstruct_main    ./scripts/mixed_2d_reconstruct.cxx)
 add_executable(mixed_2d_reconstruct_unbinned_main    ./scripts/mixed_2d_reconstruct_unbinned.cxx)
 add_executable(Roofit_res_assemble_main     ./scripts/Roofit_res_assemble.cxx)
 add_executable(unbinned_fit_res_main ./scripts/unbinned_fit_res.cxx)
+add_executable(unbinned_fit_res2_main ./scripts/unbinned_fit_res2.cxx)
 
 target_link_libraries(sum_analysis_main         sketchprj1_lib)
 target_link_libraries(Sketch1_main              sketchprj1_lib)
@@ -57,4 +61,5 @@ target_link_libraries(mixed_2d_reconstruct_main sketchprj1_lib)
 target_link_libraries(mixed_2d_reconstruct_unbinned_main sketchprj1_lib)
 target_link_libraries(Roofit_res_assemble_main  sketchprj1_lib)
 target_link_libraries(unbinned_fit_res_main sketchprj1_lib)
+target_link_libraries(unbinned_fit_res2_main sketchprj1_lib)
 

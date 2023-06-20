@@ -207,10 +207,10 @@ int main(int argc, char* argv[]){
     }
 
     TCanvas *c = new TCanvas("c", "c", 1200, 900);
-    // h->SetTitle("Integrated charge distribution");
-    h->SetTitle("Amplitude distribution");
+    h->SetTitle("Integrated charge distribution");
+    // h->SetTitle("Amplitude distribution");
     h->GetXaxis()->SetTitle("Integrated charge [ADC]");
-    h->GetXaxis()->SetTitle("Amplitude [ADC]");
+    // h->GetXaxis()->SetTitle("Amplitude [ADC]");
     h->GetYaxis()->SetTitle("Normalized count");
     h->Scale(1.0/h->Integral());
     h->GetXaxis()->SetRangeUser(0, xMax_integrated);
