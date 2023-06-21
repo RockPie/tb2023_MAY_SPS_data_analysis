@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
     bool is_in_parallel = eventNum != orginal_eventNum;
 
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2806;
+    int run_number = 2804;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -95,10 +95,12 @@ int main(int argc, char* argv[]){
         eventNum = int(eventNum / job_num * job_index);
     }
 
+    eventNum_progress_divider = eventNum / 10;
+
     for (auto i = first_event; i < eventNum; i++){
         total_events++;
         if (!eventValidPtr->at(i)) continue;
-        if (i % eventNum_progress_divider == 0)
+        if (i % eventNum_progress_divider == 0 && (job_index == 1 || !is_in_parallel))
             LOG(INFO) << "Processing event " << i << " / " << eventNum;
         
         auto HG_charges     = eventArrayPtr->at(i).HG_charges;
@@ -121,7 +123,7 @@ int main(int argc, char* argv[]){
         auto _target_event          = SJUtil::substitued_data(
             _twoD_hg_values_NA, 
             _twoD_lg_values_NA,
-            Double_t(4000),
+            Double_t(1500),
             Double_t(1)
         );
         // auto _target_event = _twoD_hg_values_NA;
@@ -200,16 +202,18 @@ int main(int argc, char* argv[]){
             chn_sum.push_back(sum);
         }
         else {
-            if (false && !is_in_parallel){
+            
+        }
+        if (true && !is_in_parallel){
                 // LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
                 Canvas_Ptr->cd();
                 Graph_Sub_Ptr->Draw("p");
                 Graph_Ptr->Draw("p same");
-                // gaussianFunc->Draw("surf3 same");
+                gaussianFunc->Draw("surf3 same");
                 Canvas_Ptr->Update();
                 Canvas_Ptr->WaitPrimitive();
                 Canvas_Ptr->Write();
-            }
+            
         }
         
         delete Graph_Ptr;
@@ -222,13 +226,15 @@ int main(int argc, char* argv[]){
     f->Close();
     delete builder;
     TFile *_save_file;
-    if (job_index != 0){        
-        auto _save_file_name = "../cachedFiles/Run_2806_fit_result_" + std::to_string(job_index) + ".root";
+    if (job_index != 0){    
+        auto run_info = "Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(job_index);    
+        auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
         _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
     else {
-        auto _save_file_name = "../cachedFiles/Run_2806_fit_result.root";
-        _save_file = new TFile(_save_file_name, "RECREATE");
+        auto run_info = "Run_" + std::to_string(run_number) + "_fit_result";
+        auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
+        _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
 
     
@@ -267,4 +273,3 @@ void set_easylogger(){
         "%datetime{%H:%m:%s}[\033[1;31m%levshort\033[0m] (%fbase) %msg");
     el::Loggers::reconfigureLogger("default", defaultConf);
 }
-

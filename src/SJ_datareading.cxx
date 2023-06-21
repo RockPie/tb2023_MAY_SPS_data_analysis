@@ -452,3 +452,191 @@ bool CAEN_data_reader::read_root_file2frame_array(const char *_root_file_name){
 
     return true;
 }
+
+bool CAEN_data_reader::ian_rootfile_adapter(const char *_root_file_name){
+    if (frame_info_array != nullptr)
+        LOG(WARNING) << "Frame info array is not empty!";
+    reset_frame_vector();
+    TFile *_root_file_ptr = new TFile(_root_file_name, "READ");
+    if (_root_file_ptr->IsZombie()) {
+        LOG(ERROR) << "Root frame file cannot be opened!";
+        return false;
+    }
+    TTree *_tree_ptr = (TTree*)_root_file_ptr->Get("hcaldata");
+
+    Long64_t trigID;
+    Float_t board0_timestamp;
+    Float_t board1_timestamp;
+    Float_t board2_timestamp;
+    Float_t board3_timestamp;
+
+    UShort_t    board0_CHID_ptr [64];
+    Int_t       board0_LG_ptr   [64];
+    Int_t       board0_HG_ptr   [64];
+    Float_t     board0_TS_ptr   [64];
+    Float_t     board0_ToT_ptr  [64];
+    UShort_t    board1_CHID_ptr [64];
+    Int_t       board1_LG_ptr   [64];
+    Int_t       board1_HG_ptr   [64];
+    Float_t     board1_TS_ptr   [64];
+    Float_t     board1_ToT_ptr  [64];
+    UShort_t    board2_CHID_ptr [64];
+    Int_t       board2_LG_ptr   [64];
+    Int_t       board2_HG_ptr   [64];
+    Float_t     board2_TS_ptr   [64];
+    Float_t     board2_ToT_ptr  [64];
+    UShort_t    board3_CHID_ptr [64];
+    Int_t       board3_LG_ptr   [64];
+    Int_t       board3_HG_ptr   [64];
+    Float_t     board3_TS_ptr   [64];
+    Float_t     board3_ToT_ptr  [64];
+
+    _tree_ptr->SetBranchAddress("trgid", &trigID);
+    _tree_ptr->SetBranchAddress("buffer_board0_global_ts", &board0_timestamp);
+    _tree_ptr->SetBranchAddress("buffer_board1_global_ts", &board1_timestamp);
+    _tree_ptr->SetBranchAddress("buffer_board2_global_ts", &board2_timestamp);
+    _tree_ptr->SetBranchAddress("buffer_board3_global_ts", &board3_timestamp);
+
+    _tree_ptr->SetBranchAddress("buffer_board0_chid", &board0_CHID_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board0_lg",   &board0_LG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board0_hg",   &board0_HG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board0_ts",   &board0_TS_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board0_tot",  &board0_ToT_ptr);
+
+    _tree_ptr->SetBranchAddress("buffer_board1_chid", &board1_CHID_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board1_lg",   &board1_LG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board1_hg",   &board1_HG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board1_ts",   &board1_TS_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board1_tot",  &board1_ToT_ptr);
+
+    _tree_ptr->SetBranchAddress("buffer_board2_chid", &board2_CHID_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board2_lg",   &board2_LG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board2_hg",   &board2_HG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board2_ts",   &board2_TS_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board2_tot",  &board2_ToT_ptr);
+
+    _tree_ptr->SetBranchAddress("buffer_board3_chid", &board3_CHID_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board3_lg",   &board3_LG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board3_hg",   &board3_HG_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board3_ts",   &board3_TS_ptr);
+    _tree_ptr->SetBranchAddress("buffer_board3_tot",  &board3_ToT_ptr);
+
+    auto n_entries = _tree_ptr->GetEntries();
+    LOG(INFO) << "Total entries: " << n_entries;
+
+    for (auto i = 0; i < n_entries; i++) {
+        _tree_ptr->GetEntry(i);
+        // LOG(INFO) << "Entry: " << i;
+        FrameInfo _frame_info0, _frame_info1, _frame_info2, _frame_info3;
+
+        std::vector<Short_t> _CHID_vec0;
+        std::vector<Short_t> _LG_vec0;
+        std::vector<Short_t> _HG_vec0;
+        std::vector<Short_t> _TS_vec0;
+        std::vector<Short_t> _ToT_vec0;
+
+        std::vector<Short_t> _CHID_vec1;
+        std::vector<Short_t> _LG_vec1;
+        std::vector<Short_t> _HG_vec1;
+        std::vector<Short_t> _TS_vec1;
+        std::vector<Short_t> _ToT_vec1;
+
+        std::vector<Short_t> _CHID_vec2;
+        std::vector<Short_t> _LG_vec2;
+        std::vector<Short_t> _HG_vec2;
+        std::vector<Short_t> _TS_vec2;
+        std::vector<Short_t> _ToT_vec2;
+
+        std::vector<Short_t> _CHID_vec3;
+        std::vector<Short_t> _LG_vec3;
+        std::vector<Short_t> _HG_vec3;
+        std::vector<Short_t> _TS_vec3;
+        std::vector<Short_t> _ToT_vec3;
+
+        // LOG(DEBUG) << "board0_timestamp: " << board0_timestamp;
+
+        for (auto j = 0; j < 64; j++) {
+            _CHID_vec0.push_back(Short_t(board0_CHID_ptr[j]));
+            _LG_vec0.push_back(Short_t(board0_LG_ptr[j]));
+            _HG_vec0.push_back(Short_t(board0_HG_ptr[j]));
+            _TS_vec0.push_back(Short_t(board0_TS_ptr[j]));
+            _ToT_vec0.push_back(Short_t(board0_ToT_ptr[j]));
+        }
+
+        for (auto j = 0; j < 64; j++) {
+            _CHID_vec1.push_back(Short_t(board1_CHID_ptr[j]));
+            _LG_vec1.push_back(Short_t(board1_LG_ptr[j]));
+            _HG_vec1.push_back(Short_t(board1_HG_ptr[j]));
+            _TS_vec1.push_back(Short_t(board1_TS_ptr[j]));
+            _ToT_vec1.push_back(Short_t(board1_ToT_ptr[j]));
+        }
+
+        for (auto j = 0; j < 64; j++) {
+            _CHID_vec2.push_back(Short_t(board2_CHID_ptr[j]));
+            _LG_vec2.push_back(Short_t(board2_LG_ptr[j]));
+            _HG_vec2.push_back(Short_t(board2_HG_ptr[j]));
+            _TS_vec2.push_back(Short_t(board2_TS_ptr[j]));
+            _ToT_vec2.push_back(Short_t(board2_ToT_ptr[j]));
+        }
+
+        for (auto j = 0; j < 64; j++) {
+            _CHID_vec3.push_back(Short_t(board3_CHID_ptr[j]));
+            _LG_vec3.push_back(Short_t(board3_LG_ptr[j]));
+            _HG_vec3.push_back(Short_t(board3_HG_ptr[j]));
+            _TS_vec3.push_back(Short_t(board3_TS_ptr[j]));
+            _ToT_vec3.push_back(Short_t(board3_ToT_ptr[j]));
+        }
+
+        _frame_info0.trigID     = Int_t(trigID);
+        _frame_info0.nboards    = 0;
+        _frame_info0.timestamp  = Double_t(board0_timestamp);
+        _frame_info0.CH         = _CHID_vec0;
+        _frame_info0.LG_charge  = _LG_vec0;
+        _frame_info0.HG_charge  = _HG_vec0;
+        _frame_info0.TS         = _TS_vec0;
+        _frame_info0.ToT        = _ToT_vec0;
+
+        _frame_info1.trigID     = Int_t(trigID);
+        _frame_info1.nboards    = 1;
+        _frame_info1.timestamp  = Double_t(board1_timestamp);
+        _frame_info1.CH         = _CHID_vec1;
+        _frame_info1.LG_charge  = _LG_vec1;
+        _frame_info1.HG_charge  = _HG_vec1;
+        _frame_info1.TS         = _TS_vec1;
+        _frame_info1.ToT        = _ToT_vec1;
+
+        _frame_info2.trigID     = Int_t(trigID);
+        _frame_info2.nboards    = 2;
+        _frame_info2.timestamp  = Double_t(board2_timestamp);
+        _frame_info2.CH         = _CHID_vec2;
+        _frame_info2.LG_charge  = _LG_vec2;
+        _frame_info2.HG_charge  = _HG_vec2;
+        _frame_info2.TS         = _TS_vec2;
+        _frame_info2.ToT        = _ToT_vec2;
+
+        _frame_info3.trigID     = Int_t(trigID);
+        _frame_info3.nboards    = 3;
+        _frame_info3.timestamp  = Double_t(board3_timestamp);
+        _frame_info3.CH         = _CHID_vec3;
+        _frame_info3.LG_charge  = _LG_vec3;
+        _frame_info3.HG_charge  = _HG_vec3;
+        _frame_info3.TS         = _TS_vec3;
+        _frame_info3.ToT        = _ToT_vec3;
+
+        this->frame_info_array->push_back(_frame_info0);
+        this->frame_info_array->push_back(_frame_info1);
+        this->frame_info_array->push_back(_frame_info2);
+        this->frame_info_array->push_back(_frame_info3);
+    }
+
+    _root_file_ptr->Close();
+
+    auto _frame_info_array_size = this->frame_info_array->size();
+    LOG(INFO) << "Frame info array size: " << _frame_info_array_size;
+    if (_frame_info_array_size == 0)
+        return false;
+    else
+        flag_frame_info_array_valid = true;
+
+    return true;
+}

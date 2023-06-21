@@ -103,6 +103,8 @@ public:
     // * Return true if success, false if failed
     bool read_root_file2frame_array(const char *_root_file_name);
 
+    bool ian_rootfile_adapter(const char *_root_file_name);
+
 
 private:
     // * Create file stream pointer based on file name

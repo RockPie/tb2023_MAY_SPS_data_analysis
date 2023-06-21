@@ -6,7 +6,8 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2806;
+    int run_number = 2804;
+    int n_dots = 15000;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -24,186 +25,95 @@ int main(int argc, char* argv[]){
     auto file_mixed_fitting_path    = SJUtil::create_filename("../cachedFiles", 
         DEFAULT_PREFIX_ROOT, run_number, "_mixed_fit_res", DEFAULT_EXTENSION_ROOT);
 
-    auto file_unbinned_file1 = "../cachedFiles/Run_2806_fit_result_1.root";
-    auto file_unbinned_file2 = "../cachedFiles/Run_2806_fit_result_2.root";
-    auto file_unbinned_file3 = "../cachedFiles/Run_2806_fit_result_3.root";
-    auto file_unbinned_file4 = "../cachedFiles/Run_2806_fit_result_4.root";
-    auto file_unbinned_file5 = "../cachedFiles/Run_2806_fit_result_5.root";
-    auto file_unbinned_file6 = "../cachedFiles/Run_2806_fit_result_6.root";
-    auto file_unbinned_file7 = "../cachedFiles/Run_2806_fit_result_7.root";
-    //auto file_unbinned_file8 = "../cachedFiles/Run_2806_fit_result_8.root";
+    int n_parallel = 8;
+    std::vector<std::string> file_unbinned_file_name_array;
+    for (int i = 0; i < n_parallel; i++){
+        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
+        file_unbinned_file_name_array.push_back(file_unbinned_file_name);
+    }
 
-    auto file_chi2_file1 = "../cachedFiles/Run_2806_chi2_ndf_1.root";
-    auto file_chi2_file2 = "../cachedFiles/Run_2806_chi2_ndf_2.root";
-    auto file_chi2_file3 = "../cachedFiles/Run_2806_chi2_ndf_3.root";
-    auto file_chi2_file4 = "../cachedFiles/Run_2806_chi2_ndf_4.root";
-    auto file_chi2_file5 = "../cachedFiles/Run_2806_chi2_ndf_5.root";
-    auto file_chi2_file6 = "../cachedFiles/Run_2806_chi2_ndf_6.root";
-    auto file_chi2_file7 = "../cachedFiles/Run_2806_chi2_ndf_7.root";
-    //auto file_chi2_file8 = "../cachedFiles/Run_2806_chi2_ndf_8.root";
+    std::vector<TFile*> file_unbinned_file_array;
+    for (int i = 0; i < n_parallel; i++){
+        auto file_unbinned_file = new TFile(file_unbinned_file_name_array[i].c_str(), "READ");
+        LOG(DEBUG) << "file_unbinned_file_name_array[i] = " << file_unbinned_file_name_array[i].c_str();
+        file_unbinned_file_array.push_back(file_unbinned_file);
+    }
 
-    TFile *f1 = new TFile(file_unbinned_file1);
-    TFile *f2 = new TFile(file_unbinned_file2);
-    TFile *f3 = new TFile(file_unbinned_file3);
-    TFile *f4 = new TFile(file_unbinned_file4);
-    TFile *f5 = new TFile(file_unbinned_file5);
-    TFile *f6 = new TFile(file_unbinned_file6);
-    TFile *f7 = new TFile(file_unbinned_file7);
-    //TFile *f8 = new TFile(file_unbinned_file8);
+    std::vector<TTree*> file_unbinned_tree_array;
+    for (int i = 0; i < n_parallel; i++){
+        auto file_unbinned_tree = (TTree*)file_unbinned_file_array[i]->Get("fittree");
+        file_unbinned_tree_array.push_back(file_unbinned_tree);
+    }
 
-    TFile *f_chi2_1 = new TFile(file_chi2_file1);
-    TFile *f_chi2_2 = new TFile(file_chi2_file2);
-    TFile *f_chi2_3 = new TFile(file_chi2_file3);
-    TFile *f_chi2_4 = new TFile(file_chi2_file4);
-    TFile *f_chi2_5 = new TFile(file_chi2_file5);
-    TFile *f_chi2_6 = new TFile(file_chi2_file6);
-    TFile *f_chi2_7 = new TFile(file_chi2_file7);
-    //TFile *f_chi2_8 = new TFile(file_chi2_file8);
+    std::vector<std::vector<double>*> fit_integral_parallel;
+    std::vector<std::vector<double>*> fit_amp1_parallel;
+    std::vector<std::vector<double>*> fit_amp2_parallel;
+    std::vector<std::vector<double>*> chi2_ndf_parallel;
+    std::vector<std::vector<double>*> max_chn_value_parallel;
+    std::vector<std::vector<double>*> chn_sum_parallel;
 
-    TTree *t1 = (TTree*)f1->Get("arrayTree");
-    TTree *t2 = (TTree*)f2->Get("arrayTree");
-    TTree *t3 = (TTree*)f3->Get("arrayTree");
-    TTree *t4 = (TTree*)f4->Get("arrayTree");
-    TTree *t5 = (TTree*)f5->Get("arrayTree");
-    TTree *t6 = (TTree*)f6->Get("arrayTree");
-    TTree *t7 = (TTree*)f7->Get("arrayTree");
-    //TTree *t8 = (TTree*)f8->Get("arrayTree");
+    for (int i = 0; i < n_parallel; i++){
+        std::vector<double> *fit_integral = nullptr;
+        std::vector<double> *fit_amp1 = nullptr;
+        std::vector<double> *fit_amp2 = nullptr;
+        std::vector<double> *chi2_ndf = nullptr;
+        std::vector<double> *max_chn_value = nullptr;
+        std::vector<double> *chn_sum = nullptr;
 
-    TTree *t_chi2_1 = (TTree*)f_chi2_1->Get("arrayTree");
-    TTree *t_chi2_2 = (TTree*)f_chi2_2->Get("arrayTree");
-    TTree *t_chi2_3 = (TTree*)f_chi2_3->Get("arrayTree");
-    TTree *t_chi2_4 = (TTree*)f_chi2_4->Get("arrayTree");
-    TTree *t_chi2_5 = (TTree*)f_chi2_5->Get("arrayTree");
-    TTree *t_chi2_6 = (TTree*)f_chi2_6->Get("arrayTree");
-    TTree *t_chi2_7 = (TTree*)f_chi2_7->Get("arrayTree");
-    //TTree *t_chi2_8 = (TTree*)f_chi2_8->Get("arrayTree");
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_integral", &fit_integral);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_amp1", &fit_amp1);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_amp2", &fit_amp2);
+        file_unbinned_tree_array[i]->SetBranchAddress("chi2_ndf", &chi2_ndf);
+        file_unbinned_tree_array[i]->SetBranchAddress("max_chn_value", &max_chn_value);
+        file_unbinned_tree_array[i]->SetBranchAddress("chn_sum", &chn_sum);
 
-    std::vector<double> *v1 = nullptr;
-    std::vector<double> *v2 = nullptr;
-    std::vector<double> *v3 = nullptr;
-    std::vector<double> *v4 = nullptr;
-    std::vector<double> *v5 = nullptr;
-    std::vector<double> *v6 = nullptr;
-    std::vector<double> *v7 = nullptr;
-    //std::vector<double> *v8 = nullptr;
+        int nentries = file_unbinned_tree_array[i]->GetEntry(0);
 
-    std::vector<double> *v_chi2_1 = nullptr;
-    std::vector<double> *v_chi2_2 = nullptr;
-    std::vector<double> *v_chi2_3 = nullptr;
-    std::vector<double> *v_chi2_4 = nullptr;
-    std::vector<double> *v_chi2_5 = nullptr;
-    std::vector<double> *v_chi2_6 = nullptr;
-    std::vector<double> *v_chi2_7 = nullptr;
-    //std::vector<double> *v_chi2_8 = nullptr;
+        fit_integral_parallel.push_back(fit_integral);
+        fit_amp1_parallel.push_back(fit_amp1);
+        fit_amp2_parallel.push_back(fit_amp2);
+        chi2_ndf_parallel.push_back(chi2_ndf);
+        max_chn_value_parallel.push_back(max_chn_value);
+        chn_sum_parallel.push_back(chn_sum);
+    }
 
-    t1->SetBranchAddress("array_data", &v1);
-    t2->SetBranchAddress("array_data", &v2);
-    t3->SetBranchAddress("array_data", &v3);
-    t4->SetBranchAddress("array_data", &v4);
-    t5->SetBranchAddress("array_data", &v5);
-    t6->SetBranchAddress("array_data", &v6);
-    t7->SetBranchAddress("array_data", &v7);
-    //t8->SetBranchAddress("array_data", &v8);
+    std::vector<double> fit_integral;
+    std::vector<double> fit_amp1;
+    std::vector<double> fit_amp2;
+    std::vector<double> chi2_ndf;
+    std::vector<double> max_chn_value;
+    std::vector<double> chn_sum;
 
-    t_chi2_1->SetBranchAddress("array_data", &v_chi2_1);
-    t_chi2_2->SetBranchAddress("array_data", &v_chi2_2);
-    t_chi2_3->SetBranchAddress("array_data", &v_chi2_3);
-    t_chi2_4->SetBranchAddress("array_data", &v_chi2_4);
-    t_chi2_5->SetBranchAddress("array_data", &v_chi2_5);
-    t_chi2_6->SetBranchAddress("array_data", &v_chi2_6);
-    t_chi2_7->SetBranchAddress("array_data", &v_chi2_7);
-    //t_chi2_8->SetBranchAddress("array_data", &v_chi2_8);
+    auto _total_event_cnt = 0;
+    auto _event_pass_chi2_cnt = 0;
 
-    int nentries1 = t1->GetEntry(0);
-    int nentries2 = t2->GetEntry(0);
-    int nentries3 = t3->GetEntry(0);
-    int nentries4 = t4->GetEntry(0);
-    int nentries5 = t5->GetEntry(0);
-    int nentries6 = t6->GetEntry(0);
-    int nentries7 = t7->GetEntry(0);
-    //int nentries8 = t8->GetEntry(0);
-
-    int nentries_chi2_1 = t_chi2_1->GetEntry(0);
-    int nentries_chi2_2 = t_chi2_2->GetEntry(0);
-    int nentries_chi2_3 = t_chi2_3->GetEntry(0);
-    int nentries_chi2_4 = t_chi2_4->GetEntry(0);
-    int nentries_chi2_5 = t_chi2_5->GetEntry(0);
-    int nentries_chi2_6 = t_chi2_6->GetEntry(0);
-    int nentries_chi2_7 = t_chi2_7->GetEntry(0);
-    //int nentries_chi2_8 = t_chi2_8->GetEntry(0);
-
-    auto xMax_integrated = 100000;
-    auto xMax_amp = 8000;
-    auto chi2_threshold = 15000;
-
-    auto total_events = 0;
-    auto total_events_passed = 0;
-
-    std::vector<double> res_assembly;
-
-    for (int i = 0; i < v1->size(); i++){
-        total_events ++;
-        if (v_chi2_1->at(i) < chi2_threshold){
-            res_assembly.push_back(v1->at(i));
-            total_events_passed ++;
+    for (int i = 0; i < n_parallel; i++){
+        for (int j = 0; j < fit_integral_parallel[i]->size(); j++){
+            _total_event_cnt++;
+            if (chi2_ndf_parallel[i]->at(j) > 2500) {
+                continue;
+            }
+            _event_pass_chi2_cnt++;
+            fit_integral.push_back(fit_integral_parallel[i]->at(j));
+            fit_amp1.push_back(fit_amp1_parallel[i]->at(j));
+            fit_amp2.push_back(fit_amp2_parallel[i]->at(j));
+            chi2_ndf.push_back(chi2_ndf_parallel[i]->at(j));
+            max_chn_value.push_back(max_chn_value_parallel[i]->at(j));
+            chn_sum.push_back(chn_sum_parallel[i]->at(j));
         }
     }
-    for (int i = 0; i < v2->size(); i++){
-        total_events ++;
-        if (v_chi2_2->at(i) < chi2_threshold){
-            res_assembly.push_back(v2->at(i));
-            total_events_passed ++;
-        }
-    }
-    for (int i = 0; i < v3->size(); i++){
-        total_events ++;
-        if (v_chi2_3->at(i) < chi2_threshold){
-            res_assembly.push_back(v3->at(i));
-            total_events_passed ++;
-        }
-    }
-    for (int i = 0; i < v4->size(); i++){
-        total_events ++;
-        if (v_chi2_4->at(i) < chi2_threshold){
-            res_assembly.push_back(v4->at(i));
-            total_events_passed ++;
-        }
-    }
-    for (int i = 0; i < v5->size(); i++){
-        total_events ++;
-        if (v_chi2_5->at(i) < chi2_threshold){
-            res_assembly.push_back(v5->at(i));
-            total_events_passed ++;
-        }
-    }
-    for (int i = 0; i < v6->size(); i++){
-        total_events ++;
-        if (v_chi2_6->at(i) < chi2_threshold){
-            res_assembly.push_back(v6->at(i));
-            total_events_passed ++;
-        }
-    }
-    for (int i = 0; i < v7->size(); i++){
-        total_events ++;
-        if (v_chi2_7->at(i) < chi2_threshold){
-            res_assembly.push_back(v7->at(i));
-            total_events_passed ++;
-        }
-    }
-    // for (int i = 0; i < v8->size(); i++){
-    //     total_events ++;
-    //     if (v_chi2_8->at(i) < chi2_threshold){
-    //         res_assembly.push_back(v8->at(i));
-    //         total_events_passed ++;
-    //     }
-    // }
+
+    LOG(INFO) << "Total number of events: " << fit_integral.size();
+
+
+    auto xMax_integrated = 40000;
     gStyle->SetCanvasColor(0);
     gStyle->SetFrameFillColor(0);
     gStyle->SetStatColor(0);
 
     TH1D *h = new TH1D("h", "h", 200, 0, xMax_integrated);
-    for (int i = 0; i < res_assembly.size(); i++){
-        h->Fill(res_assembly.at(i)/25);
+    for (int i = 0; i < fit_integral.size(); i++){
+        h->Fill(fit_integral.at(i)/25);
     }
 
     TCanvas *c = new TCanvas("c", "c", 1200, 900);
@@ -218,14 +128,11 @@ int main(int argc, char* argv[]){
     h->SetLineStyle(1);
     h->SetStats(1);
     // fit with a 1-d gaussian
-    auto gaus = new TF1("gaus", "gaus", 27000, 50000);
+    auto gaus = new TF1("gaus", "gaus", 7000, 15000);
     h->Fit(gaus, "R");
     gaus->SetLineColor(kRed);
     gaus->SetLineWidth(3);
     gaus->SetLineStyle(2);
-
-
-
 
     // get results
     auto mean = gaus->GetParameter(1);
@@ -250,14 +157,14 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
 
-    c->SaveAs("../pics/unbinned_fit_res.png");
+    auto _plot_name = "../pics/temp_distribution" + std::to_string(run_number) + ".png";
+    c->SaveAs(_plot_name.c_str());
 
-    LOG(INFO) << "Total events: " << total_events;
-    LOG(INFO) << "Total events passed: " << total_events_passed;
-    LOG(INFO) << "Efficiency: " << (double)total_events_passed/total_events;
+    auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;
+    LOG(INFO) << "Chi2 pass rate: " << _pass_rate << "%";
 
     return 0;
-    }
+}
 
 void set_easylogger(){
     el::Configurations defaultConf;

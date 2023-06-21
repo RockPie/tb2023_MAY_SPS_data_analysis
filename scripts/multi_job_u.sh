@@ -1,18 +1,16 @@
-# ./build/mixed_2d_reconstruct_main -n <value>
-# loop over 1 to 10
-
-#!/bin/bash
+# ./build/SJS_fitting_general_main -n <value> -t <value> -e <value>
 
 # Define the number of parallel processes
-max_processes=8
+max_processes=10
+event_total=10000
 
 # Function to execute the command
 execute_command() {
-    ../build/mixed_2d_reconstruct_unbinned_main -n $1 -t 8 -e 20000
+    ../build/SJS_fitting_general_main -n $1 -t $2 -e $3
 }
 
 # Export the function so it can be called by xargs
 export -f execute_command
 
 # Run the command in parallel using xargs
-seq 1 $max_processes | xargs -P $max_processes -I {} bash -c 'execute_command "$@"' _ {}
+seq 1 $max_processes | xargs -n 1 -P $max_processes -I {} bash -c "execute_command {} $max_processes $event_total"

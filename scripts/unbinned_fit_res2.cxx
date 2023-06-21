@@ -7,7 +7,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2806;
+    int run_number = 2797;
     int n_dots = 15000;
 
     // * File path
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     int n_parallel = 8;
     std::vector<std::string> file_unbinned_file_name_array;
     for (int i = 0; i < n_parallel; i++){
-        auto file_unbinned_file_name = "../cachedFiles/Run_2806_fit_result_" + std::to_string(i+1) + ".root";
+        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
         file_unbinned_file_name_array.push_back(file_unbinned_file_name);
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 
     for (int i = 0; i < n_parallel; i++){
         for (int j = 0; j < fit_integral_parallel[i]->size(); j++){
-            //if (chi2_ndf_parallel[i]->at(j) > 15000) continue;
+            if (chi2_ndf_parallel[i]->at(j) > 18000) continue;
             fit_integral.push_back(fit_integral_parallel[i]->at(j));
             fit_amp1.push_back(fit_amp1_parallel[i]->at(j));
             fit_amp2.push_back(fit_amp2_parallel[i]->at(j));
@@ -134,14 +134,15 @@ int main(int argc, char* argv[]){
     // add info on top right
     scatter->Draw("AP");
 
-    TLatex *tex = new TLatex(0.64, 0.85, "Run 2806");
+    auto run_info = Form("Run %d", run_number);
+    TLatex *tex = new TLatex(0.64, 0.85, run_info);
     tex->SetNDC();
     tex->SetTextFont(42);
     tex->SetTextSize(0.04);
     tex->SetLineWidth(2);
     tex->Draw();
 
-    TLatex *tex2 = new TLatex(0.64, 0.8, "HG/LG mixed (4,000)");
+    TLatex *tex2 = new TLatex(0.64, 0.8, "HG/LG mixed (1,500)");
     tex2->SetNDC();
     tex2->SetTextFont(42);
     tex2->SetTextSize(0.04);
@@ -160,7 +161,7 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
     // c->SaveAs("../pics/integral_channelSum.png");
-    c->SaveAs("../pics/temp.png");
+    c->SaveAs("../pics/temp2.png");
     return 0;
 }
 
