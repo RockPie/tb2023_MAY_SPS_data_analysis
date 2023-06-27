@@ -28,3 +28,10 @@ double SJFunc::dual_gaussian2D (double *x, double *par){
     double sigmaY2   = par[7]; // standard deviation y
     return par[8] * exp(-0.5 * ((x[0] - xc) * (x[0] - xc) / (sigmaX * sigmaX) + (x[1] - yc) * (x[1] - yc) / (sigmaY * sigmaY))) + par[9] * exp(-0.5 * ((x[0] - xc2) * (x[0] - xc2) / (sigmaX2 * sigmaX2) + (x[1] - yc2) * (x[1] - yc2) / (sigmaY2 * sigmaY2)));
 }
+
+double SJFunc::energy_resolution_func (double *x, double *par){
+    double p0 = par[0];
+    double p1 = par[1];
+    double p2 = par[2];
+    return sqrt(pow((p0/sqrt(x[0])),2) + pow(p1/(x[0]),2) + pow(p2,2));
+}

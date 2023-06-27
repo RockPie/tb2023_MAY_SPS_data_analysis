@@ -5,6 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
+    int run_number = 2806;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
@@ -32,7 +33,6 @@ int main(int argc, char* argv[]){
     bool is_in_parallel = eventNum != orginal_eventNum;
 
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2804;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(

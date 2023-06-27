@@ -1,8 +1,8 @@
 # ./build/SJS_fitting_general_main -n <value> -t <value> -e <value>
 
 # Define the number of parallel processes
-max_processes=10
-event_total=10000
+max_processes=8
+event_total=80000
 
 # Function to execute the command
 execute_command() {

@@ -7,8 +7,8 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2797;
-    int n_dots = 15000;
+    int run_number = 2801;
+    int n_dots = 150;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -106,11 +106,15 @@ int main(int argc, char* argv[]){
 
     TCanvas *c = new TCanvas("c", "c", 1200, 900);
 
+    auto h2 = new TH2D("h2", "h2", 100, 0, 100000, 100, 0, 100000);
+    for (int i = 0; i < n_dots; i++){
+        h2->Fill(fit_integral[i]/25, chn_sum[i]);
+    }
+
     // * 2-D scatter plot
     auto scatter = new TGraph();
     for (int i = 0; i < n_dots; i++){
         scatter->SetPoint(i, fit_integral[i]/25, chn_sum[i]);
-        //scatter->SetPoint(i, fit_amp1[i], max_chn_value[i]);
     }
 
     scatter->SetTitle("Integral vs. Channel Sum");
@@ -132,7 +136,7 @@ int main(int argc, char* argv[]){
     scatter->SetMarkerColor(kBlack);
 
     // add info on top right
-    scatter->Draw("AP");
+    scatter->Draw("P");
 
     auto run_info = Form("Run %d", run_number);
     TLatex *tex = new TLatex(0.64, 0.85, run_info);

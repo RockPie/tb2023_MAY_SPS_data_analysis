@@ -6,8 +6,39 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2804;
-    int n_dots = 15000;
+    const int    run_number = 2806;
+    const int    n_parallel = 8;
+    const int    n_bins     = 200;
+    const int    hist_xmax  = 100000;
+    const bool   is_chi2_filtering = false;
+    const double chi2_ndf_threshold = 15000;
+    // * Fit range for run 2798
+    // const double fit_xmin   = 38000;
+    // const double fit_xmax   = 61000;
+    // * Fit range for run 2799
+    // const double fit_xmin   = 31500;
+    // const double fit_xmax   = 51000;
+    // * Fit range for run 2800
+    // const double fit_xmin   = 23000;
+    // const double fit_xmax   = 46000;
+    // * Fit range for run 2806
+    const double fit_xmin   = 27000;
+    const double fit_xmax   = 45000;
+    // * Fit range for run 2801
+    // const double fit_xmin   = 21000;
+    // const double fit_xmax   = 35000;
+    // * Fit range for run 2802
+    // const double fit_xmin = 14000;
+    // const double fit_xmax = 26000;
+    // * Fit range for run 2803
+    // const double fit_xmin = 9000;
+    // const double fit_xmax = 18000;
+    // * Fit range for run 2804
+    // const double fit_xmin   = 7000;
+    // const double fit_xmax   = 14000;
+    // * Fit range for run 2805
+    // const double fit_xmin   = 3500;
+    // const double fit_xmax   = 9000;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -25,7 +56,6 @@ int main(int argc, char* argv[]){
     auto file_mixed_fitting_path    = SJUtil::create_filename("../cachedFiles", 
         DEFAULT_PREFIX_ROOT, run_number, "_mixed_fit_res", DEFAULT_EXTENSION_ROOT);
 
-    int n_parallel = 8;
     std::vector<std::string> file_unbinned_file_name_array;
     for (int i = 0; i < n_parallel; i++){
         auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
@@ -90,8 +120,9 @@ int main(int argc, char* argv[]){
     for (int i = 0; i < n_parallel; i++){
         for (int j = 0; j < fit_integral_parallel[i]->size(); j++){
             _total_event_cnt++;
-            if (chi2_ndf_parallel[i]->at(j) > 2500) {
-                continue;
+            if (chi2_ndf_parallel[i]->at(j) > chi2_ndf_threshold) {
+                if (is_chi2_filtering)
+                    continue;
             }
             _event_pass_chi2_cnt++;
             fit_integral.push_back(fit_integral_parallel[i]->at(j));
@@ -106,12 +137,11 @@ int main(int argc, char* argv[]){
     LOG(INFO) << "Total number of events: " << fit_integral.size();
 
 
-    auto xMax_integrated = 40000;
     gStyle->SetCanvasColor(0);
     gStyle->SetFrameFillColor(0);
     gStyle->SetStatColor(0);
 
-    TH1D *h = new TH1D("h", "h", 200, 0, xMax_integrated);
+    TH1D *h = new TH1D("h", "h", n_bins, 0, hist_xmax);
     for (int i = 0; i < fit_integral.size(); i++){
         h->Fill(fit_integral.at(i)/25);
     }
@@ -123,16 +153,18 @@ int main(int argc, char* argv[]){
     // h->GetXaxis()->SetTitle("Amplitude [ADC]");
     h->GetYaxis()->SetTitle("Normalized count");
     h->Scale(1.0/h->Integral());
-    h->GetXaxis()->SetRangeUser(0, xMax_integrated);
+    h->GetXaxis()->SetRangeUser(0, hist_xmax);
     h->SetLineWidth(3);
     h->SetLineStyle(1);
-    h->SetStats(1);
+    h->SetStats(0);
     // fit with a 1-d gaussian
-    auto gaus = new TF1("gaus", "gaus", 7000, 15000);
+    auto gaus = new TF1("gaus", "gaus", fit_xmin, fit_xmax);
     h->Fit(gaus, "R");
     gaus->SetLineColor(kRed);
     gaus->SetLineWidth(3);
     gaus->SetLineStyle(2);
+
+    auto chi2_ndf_str = Form("#chi^{2}/NDF = %.2f", gaus->GetChisquare()/gaus->GetNDF());
 
     // get results
     auto mean = gaus->GetParameter(1);
@@ -148,12 +180,39 @@ int main(int argc, char* argv[]){
     // show results on plot
     auto text = new TLatex();
     text->SetNDC();
+    // align: 10: left, 20: center, 30: right
+    // align: 1: bottom, 2: middle, 3: top
+    text->SetTextAlign(33);
     text->SetTextFont(43);
-    text->SetTextSize(30);
-    text->SetTextColor(kRed);
-    text->DrawLatex(0.6, 0.7, Form("mu = %.2f #pm %.2f", mean, mean_err));
-    text->DrawLatex(0.6, 0.65, Form("sigma = %.2f #pm %.2f", sigma, sigma_err));
-    text->DrawLatex(0.6, 0.6, Form("Resolution = %.2f %%", resolution));
+    text->SetTextSize(32);
+    text->SetTextColor(kBlack);
+    auto start_latex_x = 0.89;
+    auto start_latex_y = 0.87;
+    auto step = 0.05;
+    auto step_cnt = 0;
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("Run %d", run_number));
+    step_cnt++;
+    text->SetTextColor(kBlue);
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("events= %lu", fit_integral.size()));
+    step_cnt++;
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("mu = %.2f #pm %.2f", mean, mean_err));
+    step_cnt++;
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("sigma = %.2f #pm %.2f", sigma, sigma_err));
+    step_cnt++;
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("resolution = %.2f %%", resolution));
+    step_cnt++;
+    text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+        Form("chi2/ndf = %.2f / %d", gaus->GetChisquare(), gaus->GetNDF()));
+    if (is_chi2_filtering) {
+        step_cnt++;
+        text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+            Form("chi2 pass rate = %.2f %%", (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt));
+    }
     // Transparent background
     c->SetGrid();
 
