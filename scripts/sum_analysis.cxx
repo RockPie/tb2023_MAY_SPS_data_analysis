@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2819;
+    int run_number = 2806;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -76,7 +76,8 @@ int main(int argc, char* argv[]){
     th1d_HGain_Sum->SetStats(0);
     th1d_LGain_Sum->SetStats(0);
 
-    th1d_HGain_Sum->SetTitle("ADC Sum over All Channels (run 2819)");
+    auto title_str = "ADC Sum over All Channels (run " + std::to_string(run_number) + ")";
+    th1d_HGain_Sum->SetTitle(title_str.c_str());
 
     th1d_HGain_Sum->GetXaxis()->SetTitle("Charge (ADC)");
     th1d_HGain_Sum->GetYaxis()->SetTitle("Normalized counts");
@@ -111,7 +112,8 @@ int main(int argc, char* argv[]){
     canvas->Update();
     // * add grid
     canvas->SetGrid();
-    canvas->SaveAs("../cachedFiles/sum_analysis_run2819.png");
+    auto pic_name = "../pics/sum_analysis_run" + std::to_string(run_number) + ".png";
+    canvas->SaveAs(pic_name.c_str());
 
     return 0;
     }

@@ -7,8 +7,8 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2801;
-    int n_dots = 150;
+    int run_number = 2800;
+    int n_dots = 1500;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
 
     for (int i = 0; i < n_parallel; i++){
         for (int j = 0; j < fit_integral_parallel[i]->size(); j++){
-            if (chi2_ndf_parallel[i]->at(j) > 18000) continue;
+            // if (chi2_ndf_parallel[i]->at(j) > 18000) continue;
             fit_integral.push_back(fit_integral_parallel[i]->at(j));
             fit_amp1.push_back(fit_amp1_parallel[i]->at(j));
             fit_amp2.push_back(fit_amp2_parallel[i]->at(j));
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]){
     scatter->SetMarkerColor(kBlack);
 
     // add info on top right
-    scatter->Draw("P");
+    scatter->Draw("AP");
 
     auto run_info = Form("Run %d", run_number);
     TLatex *tex = new TLatex(0.64, 0.85, run_info);

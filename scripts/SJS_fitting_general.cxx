@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2806;
+    int run_number = 2798;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
@@ -82,6 +82,13 @@ int main(int argc, char* argv[]){
     std::vector<Double_t> fit_integral;
     std::vector<Double_t> fit_amp1;
     std::vector<Double_t> fit_amp2;
+    std::vector<Double_t> fit_sigma1;
+    std::vector<Double_t> fit_sigma2;
+    std::vector<Double_t> max_error;
+    std::vector<Double_t> fit_x0_1;
+    std::vector<Double_t> fit_x0_2;
+    std::vector<Double_t> fit_y0_1;
+    std::vector<Double_t> fit_y0_2;
     std::vector<Double_t> chi2_ndf;
     std::vector<Double_t> max_chn_value;
     std::vector<Double_t> chn_sum;
@@ -124,7 +131,7 @@ int main(int argc, char* argv[]){
             _twoD_hg_values_NA, 
             _twoD_lg_values_NA,
             Double_t(1500),
-            Double_t(1)
+            Double_t(1.0)
         );
         // auto _target_event = _twoD_hg_values_NA;
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
@@ -185,6 +192,15 @@ int main(int argc, char* argv[]){
         double fit_res_integral = 0; 
         double fit_res_amp1 = 0;
         double fit_res_amp2 = 0;
+        double fit_res_sigma_x_1 = 0;
+        double fit_res_sigma_y_1 = 0;
+        double fit_res_sigma_x_2 = 0;
+        double fit_res_sigma_y_2 = 0;
+        double fit_res_x0_1 = 0;
+        double fit_res_y0_1 = 0;
+        double fit_res_x0_2 = 0;
+        double fit_res_y0_2 = 0;
+        double max_error_val = 0;
         double chi2 = 0;
         double ndf = 0;
         if (fit_res == 0) {
@@ -192,11 +208,44 @@ int main(int argc, char* argv[]){
             fit_res_integral = gaussianFunc->Integral(0, 105, 0, 105);
             fit_res_amp1 = gaussianFunc->GetParameter(8);
             fit_res_amp2 = gaussianFunc->GetParameter(9);
+            fit_res_sigma_x_1 = gaussianFunc->GetParameter(2);
+            fit_res_sigma_y_1 = gaussianFunc->GetParameter(3);
+            fit_res_sigma_x_2 = gaussianFunc->GetParameter(6);
+            fit_res_sigma_y_2 = gaussianFunc->GetParameter(7);
+            fit_res_x0_1 = gaussianFunc->GetParameter(0);
+            fit_res_y0_1 = gaussianFunc->GetParameter(1);
+            fit_res_x0_2 = gaussianFunc->GetParameter(4);
+            fit_res_y0_2 = gaussianFunc->GetParameter(5);
+
+            auto _fit_sigma_1 = std::sqrt(fit_res_sigma_x_1 * fit_res_sigma_x_1 + fit_res_sigma_y_1 * fit_res_sigma_y_1);
+            auto _fit_sigma_2 = std::sqrt(fit_res_sigma_x_2 * fit_res_sigma_x_2 + fit_res_sigma_y_2 * fit_res_sigma_y_2);
+
             fit_integral.push_back(fit_res_integral);
             fit_amp1.push_back(fit_res_amp1);
             fit_amp2.push_back(fit_res_amp2);
+            fit_sigma1.push_back(_fit_sigma_1);
+            fit_sigma2.push_back(_fit_sigma_2);
+            fit_x0_1.push_back(fit_res_x0_1);
+            fit_y0_1.push_back(fit_res_y0_1);
+            fit_x0_2.push_back(fit_res_x0_2);
+            fit_y0_2.push_back(fit_res_y0_2);
+
+
             chi2 = gaussianFunc->GetChisquare();
             ndf = gaussianFunc->GetNDF();
+            
+            for (int i = 0; i < _target_event.value_vec.size(); i++) {
+                auto _x = _target_event.x_vec[i];
+                auto _y = _target_event.y_vec[i];
+                auto _z = _target_event.value_vec[i];
+                auto _fit_z = gaussianFunc->Eval(_x, _y);
+                auto _error = std::abs(_z - _fit_z);
+                if (_error > max_error_val) {
+                    max_error_val = _error;
+                }
+            }
+
+            max_error.push_back(max_error_val);
             chi2_ndf.push_back(chi2 / ndf);
             max_chn_value.push_back(initial_params[2]);
             chn_sum.push_back(sum);
@@ -204,7 +253,7 @@ int main(int argc, char* argv[]){
         else {
             
         }
-        if (true && !is_in_parallel){
+        if (true && !is_in_parallel && chi2/ndf > 30000){
                 // LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
                 Canvas_Ptr->cd();
                 Graph_Sub_Ptr->Draw("p");
@@ -213,7 +262,7 @@ int main(int argc, char* argv[]){
                 Canvas_Ptr->Update();
                 Canvas_Ptr->WaitPrimitive();
                 Canvas_Ptr->Write();
-            
+                LOG(DEBUG) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
         }
         
         delete Graph_Ptr;
@@ -243,7 +292,14 @@ int main(int argc, char* argv[]){
     tree->Branch("fit_integral", &fit_integral);
     tree->Branch("fit_amp1", &fit_amp1);
     tree->Branch("fit_amp2", &fit_amp2);
+    tree->Branch("fit_sigma1", &fit_sigma1);
+    tree->Branch("fit_sigma2", &fit_sigma2);
+    tree->Branch("fit_x0_1", &fit_x0_1);
+    tree->Branch("fit_y0_1", &fit_y0_1);
+    tree->Branch("fit_x0_2", &fit_x0_2);
+    tree->Branch("fit_y0_2", &fit_y0_2);
     tree->Branch("chi2_ndf", &chi2_ndf);
+    tree->Branch("max_error", &max_error);
     tree->Branch("max_chn_value", &max_chn_value);
     tree->Branch("chn_sum", &chn_sum);
     tree->Fill();

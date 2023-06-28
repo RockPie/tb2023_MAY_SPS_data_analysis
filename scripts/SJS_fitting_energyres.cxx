@@ -6,24 +6,23 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    const int    run_number = 2806;
-    const int    n_parallel = 8;
+    const int    run_number = 2798;
+    const int    n_parallel = 10;
     const int    n_bins     = 200;
     const int    hist_xmax  = 100000;
     const bool   is_chi2_filtering = false;
-    const double chi2_ndf_threshold = 15000;
+    const double chi2_ndf_threshold = 17000;
+    const bool   is_sigma2_filtering = true;
+    const double sigma2_threshold = 9;
     // * Fit range for run 2798
-    // const double fit_xmin   = 38000;
-    // const double fit_xmax   = 61000;
+    const double fit_xmin   = 38000;
+    const double fit_xmax   = 61000;
     // * Fit range for run 2799
     // const double fit_xmin   = 31500;
     // const double fit_xmax   = 51000;
     // * Fit range for run 2800
     // const double fit_xmin   = 23000;
     // const double fit_xmax   = 46000;
-    // * Fit range for run 2806
-    const double fit_xmin   = 27000;
-    const double fit_xmax   = 45000;
     // * Fit range for run 2801
     // const double fit_xmin   = 21000;
     // const double fit_xmax   = 35000;
@@ -39,6 +38,9 @@ int main(int argc, char* argv[]){
     // * Fit range for run 2805
     // const double fit_xmin   = 3500;
     // const double fit_xmax   = 9000;
+    // * Fit range for run 2806
+    // const double fit_xmin   = 27000;
+    // const double fit_xmax   = 45000;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -78,6 +80,8 @@ int main(int argc, char* argv[]){
     std::vector<std::vector<double>*> fit_integral_parallel;
     std::vector<std::vector<double>*> fit_amp1_parallel;
     std::vector<std::vector<double>*> fit_amp2_parallel;
+    std::vector<std::vector<double>*> fit_sigma1_parallel;
+    std::vector<std::vector<double>*> fit_sigma2_parallel;
     std::vector<std::vector<double>*> chi2_ndf_parallel;
     std::vector<std::vector<double>*> max_chn_value_parallel;
     std::vector<std::vector<double>*> chn_sum_parallel;
@@ -86,6 +90,8 @@ int main(int argc, char* argv[]){
         std::vector<double> *fit_integral = nullptr;
         std::vector<double> *fit_amp1 = nullptr;
         std::vector<double> *fit_amp2 = nullptr;
+        std::vector<double> *fit_sigma1 = nullptr;
+        std::vector<double> *fit_sigma2 = nullptr;
         std::vector<double> *chi2_ndf = nullptr;
         std::vector<double> *max_chn_value = nullptr;
         std::vector<double> *chn_sum = nullptr;
@@ -93,6 +99,8 @@ int main(int argc, char* argv[]){
         file_unbinned_tree_array[i]->SetBranchAddress("fit_integral", &fit_integral);
         file_unbinned_tree_array[i]->SetBranchAddress("fit_amp1", &fit_amp1);
         file_unbinned_tree_array[i]->SetBranchAddress("fit_amp2", &fit_amp2);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_sigma1", &fit_sigma1);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_sigma2", &fit_sigma2);
         file_unbinned_tree_array[i]->SetBranchAddress("chi2_ndf", &chi2_ndf);
         file_unbinned_tree_array[i]->SetBranchAddress("max_chn_value", &max_chn_value);
         file_unbinned_tree_array[i]->SetBranchAddress("chn_sum", &chn_sum);
@@ -102,6 +110,8 @@ int main(int argc, char* argv[]){
         fit_integral_parallel.push_back(fit_integral);
         fit_amp1_parallel.push_back(fit_amp1);
         fit_amp2_parallel.push_back(fit_amp2);
+        fit_sigma1_parallel.push_back(fit_sigma1);
+        fit_sigma2_parallel.push_back(fit_sigma2);
         chi2_ndf_parallel.push_back(chi2_ndf);
         max_chn_value_parallel.push_back(max_chn_value);
         chn_sum_parallel.push_back(chn_sum);
@@ -110,6 +120,8 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_integral;
     std::vector<double> fit_amp1;
     std::vector<double> fit_amp2;
+    std::vector<double> fit_sigma1;
+    std::vector<double> fit_sigma2;
     std::vector<double> chi2_ndf;
     std::vector<double> max_chn_value;
     std::vector<double> chn_sum;
@@ -124,10 +136,16 @@ int main(int argc, char* argv[]){
                 if (is_chi2_filtering)
                     continue;
             }
+            if (fit_sigma2_parallel[i]->at(j) < sigma2_threshold) {
+                if (is_sigma2_filtering)
+                    continue;
+            }
             _event_pass_chi2_cnt++;
             fit_integral.push_back(fit_integral_parallel[i]->at(j));
             fit_amp1.push_back(fit_amp1_parallel[i]->at(j));
             fit_amp2.push_back(fit_amp2_parallel[i]->at(j));
+            fit_sigma1.push_back(fit_sigma1_parallel[i]->at(j));
+            fit_sigma2.push_back(fit_sigma2_parallel[i]->at(j));
             chi2_ndf.push_back(chi2_ndf_parallel[i]->at(j));
             max_chn_value.push_back(max_chn_value_parallel[i]->at(j));
             chn_sum.push_back(chn_sum_parallel[i]->at(j));
@@ -213,10 +231,15 @@ int main(int argc, char* argv[]){
         text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
             Form("chi2 pass rate = %.2f %%", (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt));
     }
+    if (is_sigma2_filtering) {
+        step_cnt++;
+        text->DrawLatex(start_latex_x, start_latex_y - step_cnt*step, 
+            Form("sigma2 pass rate = %.2f %%", (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt));
+    }
     // Transparent background
     c->SetGrid();
 
-    auto _plot_name = "../pics/temp_distribution" + std::to_string(run_number) + ".png";
+    auto _plot_name = "../pics/temp4_distribution" + std::to_string(run_number) + ".png";
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

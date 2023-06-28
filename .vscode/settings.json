@@ -75,7 +75,12 @@
         "span": "cpp",
         "stack": "cpp",
         "thread": "cpp",
-        "unordered_set": "cpp"
+        "unordered_set": "cpp",
+        "__nullptr": "cpp",
+        "__string": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
@@ -106,4 +111,5 @@
         "titleBar.inactiveForeground": "#e7e7e799"
     },
     "peacock.color": "#2F4F4F",
+    // "cmake.cmakePath": "/opt/homebrew/bin/cmake",
 }
