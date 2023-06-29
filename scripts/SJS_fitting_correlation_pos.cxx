@@ -7,9 +7,9 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2805;
-    int n_dots = 2400;
-    int n_parallel = 10;
+    int run_number = 2800;
+    int n_dots = 3000;
+    int n_parallel = 8;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -151,15 +151,27 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_integral_chi2_3;
     std::vector<double> fit_integral_chi2_4;
 
-    // const double chi2_ndf_cut0 = 7400;
-    // const double chi2_ndf_cut1 = 11300;
-    // const double chi2_ndf_cut2 = 17000;
-    // const double chi2_ndf_cut3 = 27000;
+    std::vector<double> fit_x0_chi2_0;
+    std::vector<double> fit_x0_chi2_1;
+    std::vector<double> fit_x0_chi2_2;
+    std::vector<double> fit_x0_chi2_3;
+    std::vector<double> fit_x0_chi2_4;
 
-    const double chi2_ndf_cut0 = 1100;
-    const double chi2_ndf_cut1 = 1800;
-    const double chi2_ndf_cut2 = 3500;
-    const double chi2_ndf_cut3 = 5000;
+    std::vector<double> fit_y0_chi2_0;
+    std::vector<double> fit_y0_chi2_1;
+    std::vector<double> fit_y0_chi2_2;
+    std::vector<double> fit_y0_chi2_3;
+    std::vector<double> fit_y0_chi2_4;
+
+    const double chi2_ndf_cut0 = 7400;
+    const double chi2_ndf_cut1 = 11300;
+    const double chi2_ndf_cut2 = 17000;
+    const double chi2_ndf_cut3 = 27000;
+
+    // const double chi2_ndf_cut0 = 1100;
+    // const double chi2_ndf_cut1 = 1800;
+    // const double chi2_ndf_cut2 = 3500;
+    // const double chi2_ndf_cut3 = 5000;
 
 
     for (int i = 0; i < n_parallel; i++){
@@ -185,6 +197,8 @@ int main(int argc, char* argv[]){
                 fit_sigma1_chi2_0.push_back(fit_sigma1_parallel[i]->at(j));
                 fit_sigma2_chi2_0.push_back(fit_sigma2_parallel[i]->at(j));
                 fit_distance_chi2_0.push_back(sqrt(pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) + pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2)));
+                fit_x0_chi2_0.push_back(fit_x0_1_parallel[i]->at(j));
+                fit_y0_chi2_0.push_back(fit_y0_1_parallel[i]->at(j));
             }
             else {
                 if (chi2_ndf_parallel[i]->at(j) < chi2_ndf_cut1){
@@ -193,6 +207,8 @@ int main(int argc, char* argv[]){
                     fit_sigma1_chi2_1.push_back(fit_sigma1_parallel[i]->at(j));
                     fit_sigma2_chi2_1.push_back(fit_sigma2_parallel[i]->at(j));
                     fit_distance_chi2_1.push_back(sqrt(pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) + pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2)));
+                    fit_x0_chi2_1.push_back(fit_x0_1_parallel[i]->at(j));
+                    fit_y0_chi2_1.push_back(fit_y0_1_parallel[i]->at(j));
                 }
                 else {
                     if (chi2_ndf_parallel[i]->at(j) < chi2_ndf_cut2){
@@ -201,6 +217,8 @@ int main(int argc, char* argv[]){
                         fit_sigma1_chi2_2.push_back(fit_sigma1_parallel[i]->at(j));
                         fit_sigma2_chi2_2.push_back(fit_sigma2_parallel[i]->at(j));
                         fit_distance_chi2_2.push_back(sqrt(pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) + pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2)));
+                        fit_x0_chi2_2.push_back(fit_x0_1_parallel[i]->at(j));
+                        fit_y0_chi2_2.push_back(fit_y0_1_parallel[i]->at(j));
                     }
                     else {
                         if (chi2_ndf_parallel[i]->at(j) < chi2_ndf_cut3){
@@ -209,6 +227,8 @@ int main(int argc, char* argv[]){
                             fit_sigma1_chi2_3.push_back(fit_sigma1_parallel[i]->at(j));
                             fit_sigma2_chi2_3.push_back(fit_sigma2_parallel[i]->at(j));
                             fit_distance_chi2_3.push_back(sqrt(pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) + pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2)));
+                            fit_x0_chi2_3.push_back(fit_x0_1_parallel[i]->at(j));
+                            fit_y0_chi2_3.push_back(fit_y0_1_parallel[i]->at(j));
                         }
                         else {
                             chn_sum_chi2_4.push_back(chn_sum_parallel[i]->at(j));
@@ -216,6 +236,8 @@ int main(int argc, char* argv[]){
                             fit_sigma1_chi2_4.push_back(fit_sigma1_parallel[i]->at(j));
                             fit_sigma2_chi2_4.push_back(fit_sigma2_parallel[i]->at(j));
                             fit_distance_chi2_4.push_back(sqrt(pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) + pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2)));
+                            fit_x0_chi2_4.push_back(fit_x0_1_parallel[i]->at(j));
+                            fit_y0_chi2_4.push_back(fit_y0_1_parallel[i]->at(j));
                         }
                     }
                 }
@@ -253,62 +275,43 @@ int main(int argc, char* argv[]){
 
     for (int i = 0; i < chn_sum_chi2_0.size(); i++){
         //scatter_chi2_0->SetPoint(i, fit_integral_chi2_0[i]/25, chn_sum_chi2_0[i]);
-        scatter_chi2_0->SetPoint(i, fit_integral_chi2_0[i]/25, fit_sigma2_chi2_0[i]);
+        scatter_chi2_0->SetPoint(i, fit_x0_chi2_0[i], fit_y0_chi2_0[i]);
     }
 
     for (int i = 0; i < chn_sum_chi2_1.size(); i++){
         //scatter_chi2_1->SetPoint(i, fit_integral_chi2_1[i]/25, chn_sum_chi2_1[i]);
-        scatter_chi2_1->SetPoint(i, fit_integral_chi2_1[i]/25, fit_sigma2_chi2_1[i]);
+        scatter_chi2_1->SetPoint(i, fit_x0_chi2_1[i], fit_y0_chi2_1[i]);
     }
 
     for (int i = 0; i < chn_sum_chi2_2.size(); i++){
         //scatter_chi2_2->SetPoint(i, fit_integral_chi2_2[i]/25, chn_sum_chi2_2[i]);
-        scatter_chi2_2->SetPoint(i, fit_integral_chi2_2[i]/25, fit_sigma2_chi2_2[i]);
+        scatter_chi2_2->SetPoint(i, fit_x0_chi2_2[i], fit_y0_chi2_2[i]);
     }
 
     for (int i = 0; i < chn_sum_chi2_3.size(); i++){
         //scatter_chi2_3->SetPoint(i, fit_integral_chi2_3[i]/25, chn_sum_chi2_3[i]);
-        scatter_chi2_3->SetPoint(i, fit_integral_chi2_3[i]/25, fit_sigma2_chi2_3[i]);
+        scatter_chi2_3->SetPoint(i, fit_x0_chi2_3[i], fit_y0_chi2_3[i]);
     }
 
     for (int i = 0; i < chn_sum_chi2_4.size(); i++){
         //scatter_chi2_4->SetPoint(i, fit_integral_chi2_4[i]/25, chn_sum_chi2_4[i]);
-        scatter_chi2_4->SetPoint(i, fit_integral_chi2_4[i]/25, fit_sigma2_chi2_4[i]);
+        scatter_chi2_4->SetPoint(i, fit_x0_chi2_4[i], fit_y0_chi2_4[i]);
     }
 
     LOG(DEBUG) << "Drawing...";
 
     // distance vs. integral
-    scatter_chi2_4->SetTitle("#sigma_{2} vs. Integral");
-    scatter_chi2_4->GetXaxis()->SetTitle("Integrated Charge [ADC]");
-    scatter_chi2_4->GetYaxis()->SetTitle("#sigma_{2}");
+    scatter_chi2_4->SetTitle("Event Distribution in 2D Space");
+    scatter_chi2_4->GetXaxis()->SetTitle("x_{0}");
+    scatter_chi2_4->GetYaxis()->SetTitle("y_{0}");
 
+    scatter_chi2_4->GetXaxis()->SetLimits(0, 105);
 
     //scatter_chi2_0->GetXaxis()->SetRangeUser(0, 110000);
     //scatter_chi2_0->GetYaxis()->SetRangeUser(0, 110000);
-    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_3->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_2->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_1->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 30000);
 
-    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_3->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_2->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_1->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 35);
-
-    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_3->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_2->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_1->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 40000);
-
-    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_3->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_2->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_1->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 35);
+    scatter_chi2_4->GetXaxis()->SetRangeUser(30, 75);
+    scatter_chi2_4->GetYaxis()->SetRangeUser(30, 75);
 
     scatter_chi2_0->SetMarkerStyle(20);
     scatter_chi2_1->SetMarkerStyle(20);
@@ -379,11 +382,19 @@ int main(int argc, char* argv[]){
 
     // legend->Draw();
 
+    c->Update();
     c->SetGrid(2, 2);
     // log x axis
     // c->SetLogx();
     LOG(INFO) << "Saving figure...";
-    c->SaveAs("../pics/temp15.png");
+
+
+    c->SaveAs("../pics/temp_pos1.png");
+
+    // save to root file
+    //auto root_file = new TFile("../pics/temp_pos1.root", "RECREATE");
+    // c->Write();
+    // root_file->Close();
 
     delete tex;
     delete tex2;

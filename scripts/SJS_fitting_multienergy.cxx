@@ -17,17 +17,17 @@ int main(int argc, char* argv[]){
     auto file_rado_May_LG_path          = "../dataFiles/Rado_Results/Data_May_lg_Reso.txt";
 
     // * Read text file data
-    std::vector<double> rado_MC_energy, rado_MC_reso;
-    std::vector<double> rado_May_Mixed_energy, rado_May_Mixed_reso;
-    std::vector<double> rado_May_LG_energy, rado_May_LG_reso;
+    std::vector<double> rado_MC_energy, rado_MC_reso, rado_MC_reso_err;
+    std::vector<double> rado_May_Mixed_energy, rado_May_Mixed_reso, rado_May_Mixed_reso_err;
+    std::vector<double> rado_May_LG_energy, rado_May_LG_reso, rado_May_LG_reso_err;
 
     std::ifstream file_rado_MC(file_rado_MC_path);
     std::ifstream file_rado_May_Mixed(file_rado_May_Mixed_path);
     std::ifstream file_rado_May_LG(file_rado_May_LG_path);
 
-    double _rado_MC_energy, _rado_MC_reso;
-    double _rado_May_Mixed_energy, _rado_May_Mixed_reso;
-    double _rado_May_LG_energy, _rado_May_LG_reso;
+    double _rado_MC_energy, _rado_MC_reso, _rado_MC_reso_err;
+    double _rado_May_Mixed_energy, _rado_May_Mixed_reso, _rado_May_Mixed_reso_err;
+    double _rado_May_LG_energy, _rado_May_LG_reso, _rado_May_LG_reso_err;
 
     // data is delimited by comma, and each line ends with a newline
     auto delimiter = ',';
@@ -48,6 +48,13 @@ int main(int argc, char* argv[]){
         _rado_MC_reso = std::stod(token);
         rado_MC_reso.push_back(_rado_MC_reso);
     }
+    std::getline(file_rado_MC, line, line_ending);
+    std::getline(file_rado_MC, line, line_ending);
+    ss = std::stringstream(line);
+    while (std::getline(ss, token, delimiter)) {
+        _rado_MC_reso_err = std::stod(token);
+        rado_MC_reso_err.push_back(_rado_MC_reso_err);
+    }
 
     std::getline(file_rado_May_Mixed, line, line_ending);
     ss = std::stringstream(line);
@@ -63,6 +70,14 @@ int main(int argc, char* argv[]){
         rado_May_Mixed_reso.push_back(_rado_May_Mixed_reso);
     }
 
+    std::getline(file_rado_May_Mixed, line, line_ending);
+    std::getline(file_rado_May_Mixed, line, line_ending);
+    ss = std::stringstream(line);
+    while (std::getline(ss, token, delimiter)) {
+        _rado_May_Mixed_reso_err = std::stod(token);
+        rado_May_Mixed_reso_err.push_back(_rado_May_Mixed_reso_err);
+    }
+
     std::getline(file_rado_May_LG, line, line_ending);
     ss = std::stringstream(line);
     while (std::getline(ss, token, delimiter)) {
@@ -76,6 +91,16 @@ int main(int argc, char* argv[]){
         _rado_May_LG_reso = std::stod(token);
         rado_May_LG_reso.push_back(_rado_May_LG_reso);
     }
+
+    std::getline(file_rado_May_LG, line, line_ending);
+    std::getline(file_rado_May_LG, line, line_ending);
+
+    ss = std::stringstream(line);
+    while (std::getline(ss, token, delimiter)) {
+        _rado_May_LG_reso_err = std::stod(token);
+        rado_May_LG_reso_err.push_back(_rado_May_LG_reso_err);
+    }
+
     
 
     std::vector<int> run_number_array = {2798, 2799, 2801, 2802, 2803, 2804, 2805, 2806};
@@ -131,7 +156,7 @@ int main(int argc, char* argv[]){
 
         std::vector<std::string> file_unbinned_file_name_array;
         for (int i = 0; i < n_parallel; i++){
-            auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(_run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
+            auto file_unbinned_file_name = "../cachedFiles/FullRuns_220623/Run_" + std::to_string(_run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
             file_unbinned_file_name_array.push_back(file_unbinned_file_name);
         }
 
@@ -240,7 +265,8 @@ int main(int argc, char* argv[]){
         auto mean_err = gaus->GetParError(1);
         auto sigma_err = gaus->GetParError(2);
         auto resolution = sigma * 100.0 /mean;
-        auto resolution_err = 100.0 * sqrt(pow(sigma_err / sigma, 2) + pow(mean_err / mean, 2));
+        // auto resolution_err = 100 * std::abs(sigma / mean) * sqrt(pow(sigma_err / sigma, 2) + pow(mean_err / mean, 2));
+        auto resolution_err = 100 * std::abs(sigma_err / sigma - mean_err / mean);
 
         mean_vec.push_back(mean);
         sigma_vec.push_back(sigma);
@@ -273,17 +299,17 @@ int main(int argc, char* argv[]){
     
     for (int i = 0; i < rado_MC_energy.size(); i++){
         gr_rado_MC->SetPoint(i, rado_MC_energy.at(i), rado_MC_reso.at(i));
-        gr_rado_MC->SetPointError(i, 0, 0);
+        gr_rado_MC->SetPointError(i, 0, rado_MC_reso_err.at(i));
     }
 
     for (int i = 0; i < rado_May_Mixed_energy.size(); i++){
         gr_rado_MayMixed->SetPoint(i, rado_May_Mixed_energy.at(i), rado_May_Mixed_reso.at(i));
-        gr_rado_MayMixed->SetPointError(i, 0, 0);
+        gr_rado_MayMixed->SetPointError(i, 0, rado_May_Mixed_reso_err.at(i));
     }
 
     for (int i = 0; i < rado_May_LG_energy.size(); i++){
         gr_rado_MayLG->SetPoint(i, rado_May_LG_energy.at(i), rado_May_LG_reso.at(i));
-        gr_rado_MayLG->SetPointError(i, 0, 0);
+        gr_rado_MayLG->SetPointError(i, 0, rado_May_LG_reso_err.at(i));
     }
 
     gr->SetTitle("2-D Dual Gaussian Fit");
@@ -405,43 +431,43 @@ int main(int argc, char* argv[]){
         auto y_pred = er_func->Eval(dot);
         auto y = gr->Eval(dot);
         LOG(DEBUG) << "x: " << dot << ", y_pred: " << y_pred << ", y: " << y;
-        chi2_manual_gr += std::pow((y - y_pred), 2) / y;
+        chi2_manual_gr += std::pow((y - y_pred), 2) / er_func->GetParameter(2) / er_func->GetParameter(2);
     }
-    LOG(DEBUG) << "chi2_manual_gr: " << chi2_manual_gr << "auto chi2:" << er_func->GetChisquare();
+    LOG(DEBUG) << "chi2_manual_gr: " << chi2_manual_gr << " auto chi2:" << er_func->GetChisquare();
 
     auto chi2_manual_rado_MC = 0.0;
     for (auto dot: x_val){
         auto y_pred = er_func_rado_MC->Eval(dot);
         auto y = gr_rado_MC->Eval(dot);
-        chi2_manual_rado_MC += std::pow((y - y_pred), 2) / y;
+        chi2_manual_rado_MC += std::pow((y - y_pred), 2) / y / y;
     }
-    LOG(DEBUG) << "chi2_manual_rado_MC: " << chi2_manual_rado_MC << "auto chi2:" << er_func_rado_MC->GetChisquare();
+    LOG(DEBUG) << "chi2_manual_rado_MC: " << chi2_manual_rado_MC << " auto chi2:" << er_func_rado_MC->GetChisquare();
 
     auto chi2_manual_rado_MayMixed = 0.0;
     for (auto dot: x_val){
         auto y_pred = er_func_rado_MayMixed->Eval(dot);
         auto y = gr_rado_MayMixed->Eval(dot);
-        chi2_manual_rado_MayMixed += std::pow((y - y_pred), 2) / y;
+        chi2_manual_rado_MayMixed += std::pow((y - y_pred), 2) / y / y;
     }
-    LOG(DEBUG) << "chi2_manual_rado_MayMixed: " << chi2_manual_rado_MayMixed << "auto chi2:" << er_func_rado_MayMixed->GetChisquare();
+    LOG(DEBUG) << "chi2_manual_rado_MayMixed: " << chi2_manual_rado_MayMixed << " auto chi2:" << er_func_rado_MayMixed->GetChisquare();
 
     auto chi2_manual_rado_MayLG = 0.0;
     for (auto dot: x_val){
         auto y_pred = er_func_rado_MayLG->Eval(dot);
         auto y = gr_rado_MayLG->Eval(dot);
-        chi2_manual_rado_MayLG += std::pow((y - y_pred), 2) / y;
+        chi2_manual_rado_MayLG += std::pow((y - y_pred), 2) / y / y;
     }
-    LOG(DEBUG) << "chi2_manual_rado_MayLG: " << chi2_manual_rado_MayLG << "auto chi2:" << er_func_rado_MayLG->GetChisquare();
+    LOG(DEBUG) << "chi2_manual_rado_MayLG: " << chi2_manual_rado_MayLG << " auto chi2:" << er_func_rado_MayLG->GetChisquare();
 
-    // auto chi2ndf_info_1 = "Chi2/NDF = " + std::to_string(er_func->GetChisquare()) + "/" + std::to_string(er_func->GetNDF());
-    // auto chi2ndf_info_2 = "Chi2/NDF = " + std::to_string(er_func_rado_MC->GetChisquare()) + "/" + std::to_string(er_func_rado_MC->GetNDF());
-    // auto chi2ndf_info_3 = "Chi2/NDF = " + std::to_string(er_func_rado_MayMixed->GetChisquare()) + "/" + std::to_string(er_func_rado_MayMixed->GetNDF());
-    // auto chi2ndf_info_4 = "Chi2/NDF = " + std::to_string(er_func_rado_MayLG->GetChisquare()) + "/" + std::to_string(er_func_rado_MayLG->GetNDF());
+    auto chi2ndf_info_1 = "Chi2/NDF = " + std::to_string(er_func->GetChisquare()) + "/" + std::to_string(er_func->GetNDF());
+    auto chi2ndf_info_2 = "Chi2/NDF = " + std::to_string(er_func_rado_MC->GetChisquare()) + "/" + std::to_string(er_func_rado_MC->GetNDF());
+    auto chi2ndf_info_3 = "Chi2/NDF = " + std::to_string(er_func_rado_MayMixed->GetChisquare()) + "/" + std::to_string(er_func_rado_MayMixed->GetNDF());
+    auto chi2ndf_info_4 = "Chi2/NDF = " + std::to_string(er_func_rado_MayLG->GetChisquare()) + "/" + std::to_string(er_func_rado_MayLG->GetNDF());
 
-    auto chi2ndf_info_1 = "Chi2/NDF = " + std::to_string(chi2_manual_gr) + "/" + std::to_string(er_func->GetNDF());
-    auto chi2ndf_info_2 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MC) + "/" + std::to_string(er_func_rado_MC->GetNDF());
-    auto chi2ndf_info_3 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MayMixed) + "/" + std::to_string(er_func_rado_MayMixed->GetNDF());
-    auto chi2ndf_info_4 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MayLG) + "/" + std::to_string(er_func_rado_MayLG->GetNDF());
+    // auto chi2ndf_info_1 = "Chi2/NDF = " + std::to_string(chi2_manual_gr) + "/" + std::to_string(er_func->GetNDF());
+    // auto chi2ndf_info_2 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MC) + "/" + std::to_string(er_func_rado_MC->GetNDF());
+    // auto chi2ndf_info_3 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MayMixed) + "/" + std::to_string(er_func_rado_MayMixed->GetNDF());
+    // auto chi2ndf_info_4 = "Chi2/NDF = " + std::to_string(chi2_manual_rado_MayLG) + "/" + std::to_string(er_func_rado_MayLG->GetNDF());
 
     auto p0_info_1 = "p0 = " + std::to_string(er_func->GetParameter(0)) + " #pm " + std::to_string(er_func->GetParError(0));
     auto p0_info_2 = "p0 = " + std::to_string(er_func_rado_MC->GetParameter(0)) + " #pm " + std::to_string(er_func_rado_MC->GetParError(0));
@@ -536,9 +562,9 @@ int main(int argc, char* argv[]){
     canvas->SetGrid();
     // remove legend
     auto legend = new TLegend(0.55, 0.7, 0.7, 0.9);
-    legend->AddEntry(gr_rado_MC, "MC", "lp");
-    legend->AddEntry(gr_rado_MayMixed, "May Mixed", "lp");
-    legend->AddEntry(gr_rado_MayLG, "May LG", "lp");
+    legend->AddEntry(gr_rado_MC, "MC", "lep");
+    legend->AddEntry(gr_rado_MayMixed, "May Mixed", "lep");
+    legend->AddEntry(gr_rado_MayLG, "May LG", "lep");
     legend->AddEntry(gr, "2D Fitting", "lep");
     legend->SetTextSize(0.03);
     legend->Draw();

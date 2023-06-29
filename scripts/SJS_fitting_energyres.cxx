@@ -11,9 +11,11 @@ int main(int argc, char* argv[]){
     const int    n_bins     = 200;
     const int    hist_xmax  = 100000;
     const bool   is_chi2_filtering = false;
-    const double chi2_ndf_threshold = 17000;
-    const bool   is_sigma2_filtering = true;
+    const double chi2_ndf_threshold = 60;
+    const bool   is_sigma2_filtering = false;
     const double sigma2_threshold = 9;
+    const bool   is_distance_filtering = false;
+    const double distance_threshold = 10;
     // * Fit range for run 2798
     const double fit_xmin   = 38000;
     const double fit_xmax   = 61000;
@@ -82,6 +84,10 @@ int main(int argc, char* argv[]){
     std::vector<std::vector<double>*> fit_amp2_parallel;
     std::vector<std::vector<double>*> fit_sigma1_parallel;
     std::vector<std::vector<double>*> fit_sigma2_parallel;
+    std::vector<std::vector<double>*> fit_x0_1_parallel;
+    std::vector<std::vector<double>*> fit_x0_2_parallel;
+    std::vector<std::vector<double>*> fit_y0_1_parallel;
+    std::vector<std::vector<double>*> fit_y0_2_parallel;
     std::vector<std::vector<double>*> chi2_ndf_parallel;
     std::vector<std::vector<double>*> max_chn_value_parallel;
     std::vector<std::vector<double>*> chn_sum_parallel;
@@ -92,6 +98,10 @@ int main(int argc, char* argv[]){
         std::vector<double> *fit_amp2 = nullptr;
         std::vector<double> *fit_sigma1 = nullptr;
         std::vector<double> *fit_sigma2 = nullptr;
+        std::vector<double> *fit_x0_1 = nullptr;
+        std::vector<double> *fit_x0_2 = nullptr;
+        std::vector<double> *fit_y0_1 = nullptr;
+        std::vector<double> *fit_y0_2 = nullptr;
         std::vector<double> *chi2_ndf = nullptr;
         std::vector<double> *max_chn_value = nullptr;
         std::vector<double> *chn_sum = nullptr;
@@ -101,6 +111,10 @@ int main(int argc, char* argv[]){
         file_unbinned_tree_array[i]->SetBranchAddress("fit_amp2", &fit_amp2);
         file_unbinned_tree_array[i]->SetBranchAddress("fit_sigma1", &fit_sigma1);
         file_unbinned_tree_array[i]->SetBranchAddress("fit_sigma2", &fit_sigma2);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_x0_1", &fit_x0_1);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_x0_2", &fit_x0_2);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_y0_1", &fit_y0_1);
+        file_unbinned_tree_array[i]->SetBranchAddress("fit_y0_2", &fit_y0_2);
         file_unbinned_tree_array[i]->SetBranchAddress("chi2_ndf", &chi2_ndf);
         file_unbinned_tree_array[i]->SetBranchAddress("max_chn_value", &max_chn_value);
         file_unbinned_tree_array[i]->SetBranchAddress("chn_sum", &chn_sum);
@@ -112,6 +126,10 @@ int main(int argc, char* argv[]){
         fit_amp2_parallel.push_back(fit_amp2);
         fit_sigma1_parallel.push_back(fit_sigma1);
         fit_sigma2_parallel.push_back(fit_sigma2);
+        fit_x0_1_parallel.push_back(fit_x0_1);
+        fit_x0_2_parallel.push_back(fit_x0_2);
+        fit_y0_1_parallel.push_back(fit_y0_1);
+        fit_y0_2_parallel.push_back(fit_y0_2);
         chi2_ndf_parallel.push_back(chi2_ndf);
         max_chn_value_parallel.push_back(max_chn_value);
         chn_sum_parallel.push_back(chn_sum);
@@ -122,6 +140,10 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_amp2;
     std::vector<double> fit_sigma1;
     std::vector<double> fit_sigma2;
+    std::vector<double> fit_x0_1;
+    std::vector<double> fit_x0_2;
+    std::vector<double> fit_y0_1;
+    std::vector<double> fit_y0_2;
     std::vector<double> chi2_ndf;
     std::vector<double> max_chn_value;
     std::vector<double> chn_sum;
@@ -140,12 +162,22 @@ int main(int argc, char* argv[]){
                 if (is_sigma2_filtering)
                     continue;
             }
+            auto distance = std::sqrt(std::pow(fit_x0_1_parallel[i]->at(j) - fit_x0_2_parallel[i]->at(j), 2) +
+                                      std::pow(fit_y0_1_parallel[i]->at(j) - fit_y0_2_parallel[i]->at(j), 2));
+            if (distance > distance_threshold) {
+                if (is_distance_filtering)
+                    continue;
+            }
             _event_pass_chi2_cnt++;
             fit_integral.push_back(fit_integral_parallel[i]->at(j));
             fit_amp1.push_back(fit_amp1_parallel[i]->at(j));
             fit_amp2.push_back(fit_amp2_parallel[i]->at(j));
             fit_sigma1.push_back(fit_sigma1_parallel[i]->at(j));
             fit_sigma2.push_back(fit_sigma2_parallel[i]->at(j));
+            fit_x0_1.push_back(fit_x0_1_parallel[i]->at(j));
+            fit_x0_2.push_back(fit_x0_2_parallel[i]->at(j));
+            fit_y0_1.push_back(fit_y0_1_parallel[i]->at(j));
+            fit_y0_2.push_back(fit_y0_2_parallel[i]->at(j));
             chi2_ndf.push_back(chi2_ndf_parallel[i]->at(j));
             max_chn_value.push_back(max_chn_value_parallel[i]->at(j));
             chn_sum.push_back(chn_sum_parallel[i]->at(j));
@@ -239,7 +271,7 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
 
-    auto _plot_name = "../pics/temp4_distribution" + std::to_string(run_number) + ".png";
+    auto _plot_name = "../pics/temp3_distribution" + std::to_string(run_number) + ".png";
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

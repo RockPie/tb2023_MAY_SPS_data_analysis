@@ -10,7 +10,7 @@ int main(int argc, char* argv[]){
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
-    const int orginal_eventNum = 200;
+    const int orginal_eventNum = 100;
     int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
     while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
@@ -89,6 +89,10 @@ int main(int argc, char* argv[]){
     std::vector<Double_t> fit_x0_2;
     std::vector<Double_t> fit_y0_1;
     std::vector<Double_t> fit_y0_2;
+    std::vector<Double_t> fit_sigmax_1;
+    std::vector<Double_t> fit_sigmax_2;
+    std::vector<Double_t> fit_sigmay_1;
+    std::vector<Double_t> fit_sigmay_2;
     std::vector<Double_t> chi2_ndf;
     std::vector<Double_t> max_chn_value;
     std::vector<Double_t> chn_sum;
@@ -123,8 +127,8 @@ int main(int argc, char* argv[]){
         auto LG_charges_Multipled   = SJUtil::gain_multiplication(slopeInfo, offsetInfo, LG_charges);
         auto _twoD_hg_values        = SJUtil::map1d_to_2d(HG_charges_double, mapping_coords);
         auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, mapping_coords);
-        auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 1);
-        auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 1);
+        auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 0);
+        auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 0);
         auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
         auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
         auto _target_event          = SJUtil::substitued_data(
@@ -143,9 +147,11 @@ int main(int argc, char* argv[]){
         for (auto i = 0; i < value_vec.size(); i++)
             sum += double(value_vec[i]);
 
-        auto Graph_Ptr      = SJPlot::scatter_3d_raw( 
+        auto Graph_Ptr      = SJPlot::scatter_3d_raw_errors( 
             _target_event, _currentName, _currentTitle);
         Graph_Ptr->SetMarkerColor(kBlue);
+        Graph_Ptr->SetLineWidth(2);
+        Graph_Ptr->SetLineColor(kBlue);
         auto Graph_Sub_Ptr      = SJPlot::scatter_3d_raw( 
             _twoD_lg_values_NA, _currentName, _currentTitle);
         Graph_Sub_Ptr->SetMarkerColor(kRed);
@@ -162,9 +168,9 @@ int main(int argc, char* argv[]){
 
         TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
         gaussianFunc->SetParameters(
-            main_gaussian_initial_x0, main_gaussian_initial_y0, 3, 3,
-            sub_gaussian_initial_x0, sub_gaussian_initial_y0, 8, 8,
-            main_gaussian_initial_amp, sub_gaussian_initial_amp
+            main_gaussian_initial_x0,   main_gaussian_initial_y0,   3, 3,
+            sub_gaussian_initial_x0,    sub_gaussian_initial_y0,    8, 8,
+            main_gaussian_initial_amp,  sub_gaussian_initial_amp
         );
 
         gaussianFunc->SetParLimits(0, 0, 105);
@@ -229,7 +235,10 @@ int main(int argc, char* argv[]){
             fit_y0_1.push_back(fit_res_y0_1);
             fit_x0_2.push_back(fit_res_x0_2);
             fit_y0_2.push_back(fit_res_y0_2);
-
+            fit_sigmax_1.push_back(fit_res_sigma_x_1);
+            fit_sigmay_1.push_back(fit_res_sigma_y_1);
+            fit_sigmax_2.push_back(fit_res_sigma_x_2);
+            fit_sigmay_2.push_back(fit_res_sigma_y_2);
 
             chi2 = gaussianFunc->GetChisquare();
             ndf = gaussianFunc->GetNDF();
@@ -253,11 +262,11 @@ int main(int argc, char* argv[]){
         else {
             
         }
-        if (true && !is_in_parallel && chi2/ndf > 30000){
+        if (true && !is_in_parallel){
                 // LOG(INFO) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
                 Canvas_Ptr->cd();
-                Graph_Sub_Ptr->Draw("p");
-                Graph_Ptr->Draw("p same");
+                // Graph_Sub_Ptr->Draw("p");
+                Graph_Ptr->Draw("err p0");
                 gaussianFunc->Draw("surf3 same");
                 Canvas_Ptr->Update();
                 Canvas_Ptr->WaitPrimitive();
@@ -285,7 +294,6 @@ int main(int argc, char* argv[]){
         auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
         _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
-
     
     // * Write all vector<double>
     TTree *tree = new TTree("fittree", "Fit Tree");
@@ -298,6 +306,10 @@ int main(int argc, char* argv[]){
     tree->Branch("fit_y0_1", &fit_y0_1);
     tree->Branch("fit_x0_2", &fit_x0_2);
     tree->Branch("fit_y0_2", &fit_y0_2);
+    tree->Branch("fit_sigmax_1", &fit_sigmax_1);
+    tree->Branch("fit_sigmay_1", &fit_sigmay_1);
+    tree->Branch("fit_sigmax_2", &fit_sigmax_2);
+    tree->Branch("fit_sigmay_2", &fit_sigmay_2);
     tree->Branch("chi2_ndf", &chi2_ndf);
     tree->Branch("max_error", &max_error);
     tree->Branch("max_chn_value", &max_chn_value);
@@ -306,8 +318,6 @@ int main(int argc, char* argv[]){
 
     tree->Write();
     _save_file->Close();
-
-
 
     LOG(INFO) << "Finished fitting and plotting";
     auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);
