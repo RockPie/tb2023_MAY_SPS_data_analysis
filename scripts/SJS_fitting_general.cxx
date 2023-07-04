@@ -5,12 +5,13 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2798;
+    int run_number = 2806;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
     const int orginal_eventNum = 100;
+    const double default_error = 7.37;
     int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
     while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
@@ -122,16 +123,20 @@ int main(int argc, char* argv[]){
             _currentName, _currentTitle, 200, 10, 700, 500);
 
         std::vector<Double_t> HG_charges_double;
-        for (auto i = 0; i < HG_charges.size(); i++)
+        std::vector<Double_t> HG_charges_errors_double;
+        for (auto i = 0; i < HG_charges.size(); i++) {
             HG_charges_double.push_back(Double_t(HG_charges[i]));
+            HG_charges_errors_double.push_back(default_error);
+        }
         auto LG_charges_Multipled   = SJUtil::gain_multiplication(slopeInfo, offsetInfo, LG_charges);
-        auto _twoD_hg_values        = SJUtil::map1d_to_2d(HG_charges_double, mapping_coords);
-        auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, mapping_coords);
+        auto LG_errors_Multipled    = SJUtil::gain_error_multiplication(slopeInfo, offsetInfo, default_error);
+        auto _twoD_hg_values        = SJUtil::map1d_to_2d(HG_charges_double, HG_charges_errors_double, mapping_coords);
+        auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, LG_errors_Multipled, mapping_coords);
         auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 0);
         auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 0);
         auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
         auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
-        auto _target_event          = SJUtil::substitued_data(
+        auto _target_event          = SJUtil::substitued_data_error(
             _twoD_hg_values_NA, 
             _twoD_lg_values_NA,
             Double_t(1500),
@@ -152,7 +157,7 @@ int main(int argc, char* argv[]){
         Graph_Ptr->SetMarkerColor(kBlue);
         Graph_Ptr->SetLineWidth(2);
         Graph_Ptr->SetLineColor(kBlue);
-        auto Graph_Sub_Ptr      = SJPlot::scatter_3d_raw( 
+        auto Graph_Sub_Ptr      = SJPlot::scatter_3d_raw_errors( 
             _twoD_lg_values_NA, _currentName, _currentTitle);
         Graph_Sub_Ptr->SetMarkerColor(kRed);
         Graph_Sub_Ptr->SetMarkerStyle(21);

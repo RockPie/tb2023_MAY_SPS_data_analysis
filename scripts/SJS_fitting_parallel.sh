@@ -2,7 +2,7 @@
 
 # Define the number of parallel processes
 max_processes=10
-event_total=100000
+event_total=80000
 
 # Function to execute the command
 execute_command() {

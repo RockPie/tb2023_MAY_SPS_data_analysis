@@ -7,8 +7,8 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2800;
-    int n_dots = 1500;
+    int run_number = 2806;
+    int n_dots = 150;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(

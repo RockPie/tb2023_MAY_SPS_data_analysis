@@ -346,3 +346,21 @@ bool SJUtil::write_double_array_to_file(const char* _file_name, const std::vecto
 
     return true;
 }
+
+std::vector<Double_t> SJUtil::gain_error_multiplication(
+    const std::vector<Double_t> & _gain_vec,
+    const std::vector<Double_t> & _offset_vec,
+    Double_t _orginal_err){
+    std::vector<Double_t> _multiplied_data_vec;
+    auto _gain_vec_length = _gain_vec.size();
+    auto _offset_vec_length = _offset_vec.size();
+    auto _res_vec = std::vector<Double_t>();
+    if (_gain_vec_length != _offset_vec_length){
+        LOG(ERROR) << "Gain vector length (" << _gain_vec_length << ") is not equal to offset vector length (" << _offset_vec_length << ")";
+        return _res_vec;
+    }
+    // _res_vec.resize(_gain_vec_length);
+    for (auto i=0; i<_gain_vec_length; i++)
+        _res_vec.push_back(_gain_vec[i] * _orginal_err);
+    return _res_vec;
+}

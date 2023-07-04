@@ -11,6 +11,9 @@ int main(int argc, char* argv[]){
     const int    n_parallel             = 8;
     const bool   is_chi2_filtering      = false;
     const double chi2_ndf_threshold     = 15000;
+    const double fit_line_width         = 8;
+    const double data_marker_size       = 4;
+    const int box_border_width          = 2;
     auto file_energyfittingconfig_path  = "../dataFiles/EnergyConfig.csv";
     auto file_rado_MC_path              = "../dataFiles/Rado_Results/MC.txt";
     auto file_rado_May_Mixed_path       = "../dataFiles/Rado_Results/Data_May_Reso_HG_Mixed_Reso.txt";
@@ -104,7 +107,7 @@ int main(int argc, char* argv[]){
     
 
     std::vector<int> run_number_array = {2798, 2799, 2801, 2802, 2803, 2804, 2805, 2806};
-    std::vector<int> run_energy_array = {300,  350,  200,  150,  100,  80,   60,   250}; // * in GeV
+    std::vector<int> run_energy_array = {350,  300,  200,  150,  100,  80,   60,   250}; // * in GeV
 
     if (run_number_array.size() != run_energy_array.size()){
         LOG(ERROR) << "run_number_array.size() != run_energy_array.size()";
@@ -156,7 +159,7 @@ int main(int argc, char* argv[]){
 
         std::vector<std::string> file_unbinned_file_name_array;
         for (int i = 0; i < n_parallel; i++){
-            auto file_unbinned_file_name = "../cachedFiles/FullRuns_220623/Run_" + std::to_string(_run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
+            auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(_run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
             file_unbinned_file_name_array.push_back(file_unbinned_file_name);
         }
 
@@ -264,9 +267,9 @@ int main(int argc, char* argv[]){
         auto sigma = gaus->GetParameter(2);
         auto mean_err = gaus->GetParError(1);
         auto sigma_err = gaus->GetParError(2);
-        auto resolution = sigma * 100.0 /mean;
+        auto resolution = sigma /mean;
         // auto resolution_err = 100 * std::abs(sigma / mean) * sqrt(pow(sigma_err / sigma, 2) + pow(mean_err / mean, 2));
-        auto resolution_err = 100 * std::abs(sigma_err / sigma - mean_err / mean);
+        auto resolution_err = std::abs(sigma_err / sigma - mean_err / mean);
 
         mean_vec.push_back(mean);
         sigma_vec.push_back(sigma);
@@ -282,7 +285,7 @@ int main(int argc, char* argv[]){
     }
 
     // * Draw resolution vs. energy
-    auto canvas = new TCanvas("canvas", "canvas", 1400, 700);
+    auto canvas = new TCanvas("canvas", "canvas", 3600, 2000);
     // set high dpi
     gStyle->SetOptTitle(0); // remove title
     // gStyle->SetOptFit(1011);
@@ -293,8 +296,8 @@ int main(int argc, char* argv[]){
     auto gr_rado_MayLG      = new TGraphErrors();
 
     for (int i = 0; i < run_energy_array.size(); i++){
-        gr->SetPoint(i, run_energy_array.at(i), resolution_vec.at(i)/Double_t(100));
-        gr->SetPointError(i, 0, resolution_err_vec.at(i)/Double_t(100));
+        gr->SetPoint(i, run_energy_array.at(i), resolution_vec.at(i));
+        gr->SetPointError(i, 0, resolution_err_vec.at(i));
     }
     
     for (int i = 0; i < rado_MC_energy.size(); i++){
@@ -321,28 +324,27 @@ int main(int argc, char* argv[]){
     gr_rado_MC->GetYaxis()->SetTitle("#sigma (E) / E");
 
     // x axis range
-    gr->GetXaxis()->SetLimits(0, 400);
-    gr->GetXaxis()->SetRangeUser(0, 400);
-    gr->GetYaxis()->SetLimits(0.07, 0.4);
-    gr->GetYaxis()->SetRangeUser(0.07, 0.4);
     gr->SetMarkerStyle(20);
-    gr->SetMarkerSize(1.5);
+    gr->SetMarkerSize(data_marker_size);
     gr->SetMarkerColor(kCyan-2);
     gr->SetLineStyle(1);
 
     gr_rado_MC->GetXaxis()->SetLimits(0, 400);
     gr_rado_MC->GetXaxis()->SetRangeUser(0, 400);
-    gr_rado_MC->GetYaxis()->SetLimits(0.07,0.4);
-    gr_rado_MC->GetYaxis()->SetRangeUser(0.07,0.4);
+    gr_rado_MC->GetYaxis()->SetLimits(0.1,0.4);
+    gr_rado_MC->GetYaxis()->SetRangeUser(0.1,0.4);
+
+    // * Set axis width
+
     gr_rado_MC->SetMarkerStyle(22);
-    gr_rado_MC->SetMarkerSize(2);
+    gr_rado_MC->SetMarkerSize(data_marker_size*1.2);
     gr_rado_MC->SetMarkerColor(kRed);
     gr_rado_MC->SetLineStyle(3);
 
     gr_rado_MayMixed->GetXaxis()->SetRangeUser(0, 400);
     gr_rado_MayMixed->GetYaxis()->SetRangeUser(0.07, 0.4);
     gr_rado_MayMixed->SetMarkerStyle(21);
-    gr_rado_MayMixed->SetMarkerSize(1.5);
+    gr_rado_MayMixed->SetMarkerSize(data_marker_size);
     gr_rado_MayMixed->SetMarkerColor(kOrange-6);
     gr_rado_MayMixed->SetLineStyle(7);
 
@@ -350,24 +352,24 @@ int main(int argc, char* argv[]){
     gr_rado_MayLG->GetXaxis()->SetRangeUser(0, 400);
     gr_rado_MayLG->GetYaxis()->SetRangeUser(0.07, 0.4);
     gr_rado_MayLG->SetMarkerStyle(47);
-    gr_rado_MayLG->SetMarkerSize(2);
+    gr_rado_MayLG->SetMarkerSize(data_marker_size*1.2);
     gr_rado_MayLG->SetMarkerColor(kBlack);
     gr_rado_MayLG->SetLineStyle(4);
 
     // set error bar style
-    gr->SetLineWidth(3);
+    gr->SetLineWidth(fit_line_width);
     gr->SetLineColor(kCyan-2);
     gr->SetLineStyle(1);
 
-    gr_rado_MC->SetLineWidth(3);
+    gr_rado_MC->SetLineWidth(fit_line_width);
     gr_rado_MC->SetLineColor(kRed);
     gr_rado_MC->SetLineStyle(1);
 
-    gr_rado_MayMixed->SetLineWidth(3);
+    gr_rado_MayMixed->SetLineWidth(fit_line_width);
     gr_rado_MayMixed->SetLineColor(kOrange-6);
     gr_rado_MayMixed->SetLineStyle(1);
 
-    gr_rado_MayLG->SetLineWidth(3);
+    gr_rado_MayLG->SetLineWidth(fit_line_width);
     gr_rado_MayLG->SetLineColor(kBlack);
     gr_rado_MayLG->SetLineStyle(1);
 
@@ -378,6 +380,8 @@ int main(int argc, char* argv[]){
 
     er_func->SetParNames("p0", "p1", "p3");
     er_func->SetParameters(1, 0, 0.15);
+    // set fixed p1
+
     er_func_rado_MC->SetParNames("p0", "p1", "p3");
     er_func_rado_MC->SetParameters(1, 0, 0.15);
     er_func_rado_MayMixed->SetParNames("p0", "p1", "p3");
@@ -385,22 +389,27 @@ int main(int argc, char* argv[]){
     er_func_rado_MayLG->SetParNames("p0", "p1", "p3");
     er_func_rado_MayLG->SetParameters(1, 0, 0.15);
 
-    er_func->SetLineColor(kCyan-2);
-    er_func->SetLineWidth(3);
+    er_func->SetLineColorAlpha(kCyan-2, 0.5);
+    er_func->SetLineWidth(fit_line_width);
 
-    er_func_rado_MC->SetLineColor(kRed);
-    er_func_rado_MC->SetLineWidth(3);
+    er_func_rado_MC->SetLineColorAlpha(kRed, 0.5);
+    er_func_rado_MC->SetLineWidth(fit_line_width);
 
-    er_func_rado_MayMixed->SetLineColor(kOrange-6);
-    er_func_rado_MayMixed->SetLineWidth(3);
+    er_func_rado_MayMixed->SetLineColorAlpha(kOrange-6, 0.5);
+    er_func_rado_MayMixed->SetLineWidth(fit_line_width);
 
-    er_func_rado_MayLG->SetLineColor(kBlack);
-    er_func_rado_MayLG->SetLineWidth(3);
+    er_func_rado_MayLG->SetLineColorAlpha(kBlack, 0.5);
+    er_func_rado_MayLG->SetLineWidth(fit_line_width);
     // make dashed line
     er_func->SetLineStyle(1);
     er_func_rado_MC->SetLineStyle(3);
     er_func_rado_MayMixed->SetLineStyle(7);
     er_func_rado_MayLG->SetLineStyle(4);
+
+    er_func->FixParameter(1, 0);
+    er_func_rado_MC->FixParameter(1, 0);
+    er_func_rado_MayMixed->FixParameter(1, 0);
+    er_func_rado_MayLG->FixParameter(1, 0);
 
     auto fit_option = "ER";
     // * print all gr data points
@@ -505,10 +514,10 @@ int main(int argc, char* argv[]){
     info_box_1->AddText(p1_info_2.c_str());
     info_box_1->AddText(p2_info_2.c_str());
     info_box_1->SetTextFont(42);
-    info_box_1->SetTextSize(0.03);
+    info_box_1->SetTextSize(0.025);
     info_box_1->SetTextColor(kRed);
     info_box_1->SetFillColor(kWhite);
-    info_box_1->SetBorderSize(1);
+    info_box_1->SetBorderSize(box_border_width);
 
     auto info_box_2 = new TPaveText(0.7, 0.64, 0.9, 0.77, "NDC");
     info_box_2->AddText(chi2ndf_info_3.c_str());
@@ -516,10 +525,10 @@ int main(int argc, char* argv[]){
     info_box_2->AddText(p1_info_3.c_str());
     info_box_2->AddText(p2_info_3.c_str());
     info_box_2->SetTextFont(42);
-    info_box_2->SetTextSize(0.03);
+    info_box_2->SetTextSize(0.025);
     info_box_2->SetTextColor(kOrange-6);
     info_box_2->SetFillColor(kWhite);
-    info_box_2->SetBorderSize(1);
+    info_box_2->SetBorderSize(box_border_width);
 
     auto info_box_3 = new TPaveText(0.7, 0.51, 0.9, 0.64, "NDC");
     info_box_3->AddText(chi2ndf_info_4.c_str());
@@ -527,10 +536,10 @@ int main(int argc, char* argv[]){
     info_box_3->AddText(p1_info_4.c_str());
     info_box_3->AddText(p2_info_4.c_str());
     info_box_3->SetTextFont(42);
-    info_box_3->SetTextSize(0.03);
+    info_box_3->SetTextSize(0.025);
     info_box_3->SetTextColor(kBlack);
     info_box_3->SetFillColor(kWhite);
-    info_box_3->SetBorderSize(1);
+    info_box_3->SetBorderSize(box_border_width);
 
     auto info_box_4 = new TPaveText(0.7, 0.38, 0.9, 0.51, "NDC");
     info_box_4->AddText(chi2ndf_info_1.c_str());
@@ -538,10 +547,10 @@ int main(int argc, char* argv[]){
     info_box_4->AddText(p1_info_1.c_str());
     info_box_4->AddText(p2_info_1.c_str());
     info_box_4->SetTextFont(42);
-    info_box_4->SetTextSize(0.03);
+    info_box_4->SetTextSize(0.025);
     info_box_4->SetTextColor(kCyan-2);
     info_box_4->SetFillColor(kWhite);
-    info_box_4->SetBorderSize(1);
+    info_box_4->SetBorderSize(box_border_width);
 
 
     info_box_1->Draw();
@@ -559,6 +568,15 @@ int main(int argc, char* argv[]){
     info_box_fit_func->Draw();
 
     // er_func->Draw("same");
+    // set gird thickness
+    gStyle->SetGridWidth(5);
+    // set grid style to dashed
+    gStyle->SetGridStyle(2);
+    // set grid color to gray
+    gStyle->SetGridColor(kGray);
+
+    // set 1/sqrt(x) x axis
+    // set grid
     canvas->SetGrid();
     // remove legend
     auto legend = new TLegend(0.55, 0.7, 0.7, 0.9);
@@ -567,10 +585,11 @@ int main(int argc, char* argv[]){
     legend->AddEntry(gr_rado_MayLG, "May LG", "lep");
     legend->AddEntry(gr, "2D Fitting", "lep");
     legend->SetTextSize(0.03);
+    legend->SetBorderSize(box_border_width);
     legend->Draw();
 
     watermark->Draw();
-    canvas->SaveAs("../pics/resolution_vs_energy.png");
+    canvas->SaveAs("../pics/resolution_vs_energy3.png");
 
     LOG(INFO) << "Chi2/ndf: " << er_func->GetChisquare()/er_func->GetNDF();
 

@@ -6,43 +6,59 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    const int    run_number = 2798;
-    const int    n_parallel = 10;
-    const int    n_bins     = 200;
-    const int    hist_xmax  = 100000;
-    const bool   is_chi2_filtering = false;
-    const double chi2_ndf_threshold = 60;
-    const bool   is_sigma2_filtering = false;
-    const double sigma2_threshold = 9;
-    const bool   is_distance_filtering = false;
-    const double distance_threshold = 10;
+    const int    run_number         = 2806;
+    const int    n_parallel         = 10;
+    const int    n_bins             = 200;
+    const int    hist_xmax          = 100000;
+    const bool   is_chi2_filtering      = false;
+    const double chi2_ndf_threshold     = 200;
+    const bool   is_sigma2_filtering    = false;
+    const double sigma2_threshold       = 1000;
+    const bool   is_distance_filtering  = false;
+    const double distance_threshold     = 10;
     // * Fit range for run 2798
-    const double fit_xmin   = 38000;
-    const double fit_xmax   = 61000;
+    // const double fit_xmin   = 38000;
+    // const double fit_xmax   = 61000;
+    // const double fit_xmin   = 40000;
+    // const double fit_xmax   = 62000;
     // * Fit range for run 2799
     // const double fit_xmin   = 31500;
     // const double fit_xmax   = 51000;
+    // const double fit_xmin   = 34500;
+    // const double fit_xmax   = 54000;
     // * Fit range for run 2800
     // const double fit_xmin   = 23000;
     // const double fit_xmax   = 46000;
     // * Fit range for run 2801
     // const double fit_xmin   = 21000;
     // const double fit_xmax   = 35000;
+    // const double fit_xmin   = 22000;
+    // const double fit_xmax   = 37000;
     // * Fit range for run 2802
     // const double fit_xmin = 14000;
     // const double fit_xmax = 26000;
+    // const double fit_xmin = 16000;
+    // const double fit_xmax = 29000;
     // * Fit range for run 2803
     // const double fit_xmin = 9000;
     // const double fit_xmax = 18000;
+    // const double fit_xmin = 10000;
+    // const double fit_xmax = 19000;
     // * Fit range for run 2804
     // const double fit_xmin   = 7000;
     // const double fit_xmax   = 14000;
+    // const double fit_xmin   = 7500;
+    // const double fit_xmax   = 16000;
     // * Fit range for run 2805
     // const double fit_xmin   = 3500;
     // const double fit_xmax   = 9000;
+    // const double fit_xmin   = 3500;
+    // const double fit_xmax   = 11000;
     // * Fit range for run 2806
     // const double fit_xmin   = 27000;
     // const double fit_xmax   = 45000;
+    const double fit_xmin   = 28000;
+    const double fit_xmax   = 46000;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -93,18 +109,18 @@ int main(int argc, char* argv[]){
     std::vector<std::vector<double>*> chn_sum_parallel;
 
     for (int i = 0; i < n_parallel; i++){
-        std::vector<double> *fit_integral = nullptr;
-        std::vector<double> *fit_amp1 = nullptr;
-        std::vector<double> *fit_amp2 = nullptr;
-        std::vector<double> *fit_sigma1 = nullptr;
-        std::vector<double> *fit_sigma2 = nullptr;
-        std::vector<double> *fit_x0_1 = nullptr;
-        std::vector<double> *fit_x0_2 = nullptr;
-        std::vector<double> *fit_y0_1 = nullptr;
-        std::vector<double> *fit_y0_2 = nullptr;
-        std::vector<double> *chi2_ndf = nullptr;
-        std::vector<double> *max_chn_value = nullptr;
-        std::vector<double> *chn_sum = nullptr;
+        std::vector<double> *fit_integral   = nullptr;
+        std::vector<double> *fit_amp1       = nullptr;
+        std::vector<double> *fit_amp2       = nullptr;
+        std::vector<double> *fit_sigma1     = nullptr;
+        std::vector<double> *fit_sigma2     = nullptr;
+        std::vector<double> *fit_x0_1       = nullptr;
+        std::vector<double> *fit_x0_2       = nullptr;
+        std::vector<double> *fit_y0_1       = nullptr;
+        std::vector<double> *fit_y0_2       = nullptr;
+        std::vector<double> *chi2_ndf       = nullptr;
+        std::vector<double> *max_chn_value  = nullptr;
+        std::vector<double> *chn_sum        = nullptr;
 
         file_unbinned_tree_array[i]->SetBranchAddress("fit_integral", &fit_integral);
         file_unbinned_tree_array[i]->SetBranchAddress("fit_amp1", &fit_amp1);
@@ -271,7 +287,7 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
 
-    auto _plot_name = "../pics/temp3_distribution" + std::to_string(run_number) + ".png";
+    auto _plot_name = "../pics/temp7_distribution" + std::to_string(run_number) + ".png";
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

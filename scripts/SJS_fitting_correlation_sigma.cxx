@@ -7,7 +7,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2805;
+    int run_number = 2800;
     int n_dots = 2400;
     int n_parallel = 10;
 
@@ -156,10 +156,15 @@ int main(int argc, char* argv[]){
     // const double chi2_ndf_cut2 = 17000;
     // const double chi2_ndf_cut3 = 27000;
 
-    const double chi2_ndf_cut0 = 1100;
-    const double chi2_ndf_cut1 = 1800;
-    const double chi2_ndf_cut2 = 3500;
-    const double chi2_ndf_cut3 = 5000;
+    //const double chi2_ndf_cut0 = 1100;
+    //const double chi2_ndf_cut1 = 1800;
+    //const double chi2_ndf_cut2 = 3500;
+    //const double chi2_ndf_cut3 = 5000;
+
+    const double chi2_ndf_cut0 = 90;
+    const double chi2_ndf_cut1 = 114;
+    const double chi2_ndf_cut2 = 150;
+    const double chi2_ndf_cut3 = 200;
 
 
     for (int i = 0; i < n_parallel; i++){
@@ -286,23 +291,12 @@ int main(int argc, char* argv[]){
 
     //scatter_chi2_0->GetXaxis()->SetRangeUser(0, 110000);
     //scatter_chi2_0->GetYaxis()->SetRangeUser(0, 110000);
-    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_3->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_2->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_1->GetXaxis()->SetRangeUser(0, 30000);
-    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 30000);
 
-    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_3->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_2->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_1->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 35);
-
-    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_3->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_2->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_1->GetXaxis()->SetRangeUser(0, 40000);
-    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 40000);
+    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 110000);
+    scatter_chi2_3->GetXaxis()->SetRangeUser(0, 110000);
+    scatter_chi2_2->GetXaxis()->SetRangeUser(0, 110000);
+    scatter_chi2_1->GetXaxis()->SetRangeUser(0, 110000);
+    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 110000);
 
     scatter_chi2_4->GetYaxis()->SetRangeUser(0, 35);
     scatter_chi2_3->GetYaxis()->SetRangeUser(0, 35);
@@ -377,13 +371,13 @@ int main(int argc, char* argv[]){
     legend->AddEntry(scatter_chi2_3, str_chi2_3.c_str(), "p");
     legend->AddEntry(scatter_chi2_4, str_chi2_4.c_str(), "p");
 
-    // legend->Draw();
+    legend->Draw();
 
     c->SetGrid(2, 2);
     // log x axis
     // c->SetLogx();
     LOG(INFO) << "Saving figure...";
-    c->SaveAs("../pics/temp15.png");
+    c->SaveAs("../pics/temp16.png");
 
     delete tex;
     delete tex2;

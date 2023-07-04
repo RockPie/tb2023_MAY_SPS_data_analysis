@@ -84,8 +84,9 @@
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
+        "${workspaceFolder}/include",
         "/opt/homebrew/Cellar/root/6.26.06_2/include/root",
-        "./include",
+        "/Users/geoffrey/MEGAsync/CPP_WorkRoom/ROOT/Sketch_SPS/include",
     ],
     "code-runner.executorMapByFileExtension": {
         "cxx": "cd $dir && root $fileName",
