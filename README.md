@@ -1,7 +1,6 @@
-# SJ's CAEN analysis code
+# SJ's CAEN analysis scripts
 
 Shihai J.
-Niels Bohr Institute, University of Copenhagen
 
 - [SJ's CAEN data analysis project](#sjs-caen-data-analysis-project)
   - [1. Typical workflow](#1-typical-workflow)
