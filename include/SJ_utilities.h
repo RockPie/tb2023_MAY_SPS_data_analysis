@@ -281,7 +281,7 @@ namespace SJUtil{
         auto _central_x_max  = 70;
         auto _central_y_min  = 34;
         auto _central_y_max  = 70;
-        Double_t _area_ratio = double(AREA_CENTRAL_MODULE) / double(AREA_OUTER_MODULE);
+        Double_t _area_ratio = Double_t(AREA_CENTRAL_MODULE) / Double_t(AREA_OUTER_MODULE);
         DataErrorSet2D<T>_copy_mapped_data;
         auto _data_length = _mapped_data.value_vec.size();
         for (auto i=0; i<_data_length; i++){

@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2806;
+    int run_number = 2798;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
     th1d_LGain_Sum->Scale(1.0/th1d_LGain_Sum->Integral());
 
     // * Fit with 1-D Gaussian
-    auto fit_func = new TF1("fit_func", "gaus", 34000, 52000);
+    auto fit_func = new TF1("fit_func", "gaus", 50000, 72000);
     fit_func->SetLineColor(kGreen);
     fit_func->SetLineWidth(2);
     // set dashed line

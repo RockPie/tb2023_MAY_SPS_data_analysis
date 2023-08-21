@@ -7,8 +7,8 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2800;
-    int n_dots = 2400;
+    int run_number = 2806;
+    int n_dots = 20;
     int n_parallel = 10;
 
     // * File path
@@ -161,10 +161,25 @@ int main(int argc, char* argv[]){
     //const double chi2_ndf_cut2 = 3500;
     //const double chi2_ndf_cut3 = 5000;
 
-    const double chi2_ndf_cut0 = 90;
-    const double chi2_ndf_cut1 = 114;
-    const double chi2_ndf_cut2 = 150;
-    const double chi2_ndf_cut3 = 200;
+    // const double chi2_ndf_cut0 = 90;
+    // const double chi2_ndf_cut1 = 114;
+    // const double chi2_ndf_cut2 = 150;
+    // const double chi2_ndf_cut3 = 200;
+
+    // * Automatically find the best chi2_ndf cut
+    // * to divide the data into 5 groups evenly
+    for (int i = 0; i < n_parallel; i++){
+        for (int j = 0; j < n_dots; j++){
+            chi2_ndf.push_back(chi2_ndf_parallel[i]->at(j));
+        }
+    }
+
+    auto chi2_ndf_sorted = chi2_ndf;
+    std::sort(chi2_ndf_sorted.begin(), chi2_ndf_sorted.end());
+    auto chi2_ndf_cut0 = chi2_ndf_sorted.at(n_dots*n_parallel / 5);
+    auto chi2_ndf_cut1 = chi2_ndf_sorted.at(n_dots*n_parallel * 2 / 5);
+    auto chi2_ndf_cut2 = chi2_ndf_sorted.at(n_dots*n_parallel * 3 / 5);
+    auto chi2_ndf_cut3 = chi2_ndf_sorted.at(n_dots*n_parallel * 4 / 5);
 
 
     for (int i = 0; i < n_parallel; i++){
@@ -242,11 +257,11 @@ int main(int argc, char* argv[]){
     double rate_chi2_4 = double(chn_sum_chi2_4.size()) / double(fit_integral.size()) * 100.0;
 
     // * Data read finished
-    gStyle->SetCanvasColor(0);
-    gStyle->SetFrameFillColor(0);
-    gStyle->SetStatColor(0);
 
-    TCanvas *c = new TCanvas("c", "c", 1600, 1400);
+
+
+    TCanvas *c = new TCanvas("c", "c", 1200, 1000);
+    
 
     // * 2-D scatter plot
     auto scatter_chi2_0 = new TGraph();
@@ -298,11 +313,11 @@ int main(int argc, char* argv[]){
     scatter_chi2_1->GetXaxis()->SetRangeUser(0, 110000);
     scatter_chi2_0->GetXaxis()->SetRangeUser(0, 110000);
 
-    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_3->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_2->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_1->GetYaxis()->SetRangeUser(0, 35);
-    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 35);
+    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 40);
+    scatter_chi2_3->GetYaxis()->SetRangeUser(0, 40);
+    scatter_chi2_2->GetYaxis()->SetRangeUser(0, 40);
+    scatter_chi2_1->GetYaxis()->SetRangeUser(0, 40);
+    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 40);
 
     scatter_chi2_0->SetMarkerStyle(20);
     scatter_chi2_1->SetMarkerStyle(20);
@@ -310,11 +325,11 @@ int main(int argc, char* argv[]){
     scatter_chi2_3->SetMarkerStyle(20);
     scatter_chi2_4->SetMarkerStyle(20);
 
-    scatter_chi2_0->SetMarkerSize(1.3);
-    scatter_chi2_1->SetMarkerSize(1.3);
-    scatter_chi2_2->SetMarkerSize(1.3);
-    scatter_chi2_3->SetMarkerSize(1.3);
-    scatter_chi2_4->SetMarkerSize(1.3);
+    scatter_chi2_0->SetMarkerSize(1.2);
+    scatter_chi2_1->SetMarkerSize(1.2);
+    scatter_chi2_2->SetMarkerSize(1.2);
+    scatter_chi2_3->SetMarkerSize(1.2);
+    scatter_chi2_4->SetMarkerSize(1.2);
 
     scatter_chi2_0->SetMarkerColorAlpha(kAzure,     0.7);
     scatter_chi2_1->SetMarkerColorAlpha(kCyan+1,    0.7);
@@ -322,7 +337,6 @@ int main(int argc, char* argv[]){
     scatter_chi2_3->SetMarkerColorAlpha(kOrange-3,  0.7);
     scatter_chi2_4->SetMarkerColorAlpha(kPink-2,    0.7);
 
-    // add info on top right
     scatter_chi2_4->Draw("AP");
     scatter_chi2_3->Draw("P");
     scatter_chi2_2->Draw("P");
@@ -371,13 +385,19 @@ int main(int argc, char* argv[]){
     legend->AddEntry(scatter_chi2_3, str_chi2_3.c_str(), "p");
     legend->AddEntry(scatter_chi2_4, str_chi2_4.c_str(), "p");
 
-    legend->Draw();
+    // legend->Draw();
 
     c->SetGrid(2, 2);
     // log x axis
     // c->SetLogx();
     LOG(INFO) << "Saving figure...";
-    c->SaveAs("../pics/temp16.png");
+    // transparent background
+    gPad->SetFillColorAlpha(1, 0);
+    gStyle->SetFillColorAlpha(1, 0);
+    c->SetFillColorAlpha(1, 0);
+    c->SetFillStyle(4000); // transparent
+    c->Update();
+    c->SaveAs("../pics/temp3_sigma.png");
 
     delete tex;
     delete tex2;

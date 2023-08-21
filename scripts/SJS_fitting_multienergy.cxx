@@ -8,7 +8,7 @@ int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
 
-    const int    n_parallel             = 8;
+    const int    n_parallel             = 10;
     const bool   is_chi2_filtering      = false;
     const double chi2_ndf_threshold     = 15000;
     const double fit_line_width         = 8;

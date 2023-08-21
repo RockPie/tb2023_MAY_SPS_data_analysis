@@ -80,18 +80,15 @@
         "__string": "cpp",
         "chrono": "cpp",
         "compare": "cpp",
-        "concepts": "cpp"
+        "concepts": "cpp",
+        "transpad.C": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/include",
-        "/opt/homebrew/Cellar/root/6.26.06_2/include/root",
+        "/opt/homebrew/Cellar/root/6.28.04/include/root",
         "/Users/geoffrey/MEGAsync/CPP_WorkRoom/ROOT/Sketch_SPS/include",
     ],
-    "code-runner.executorMapByFileExtension": {
-        "cxx": "cd $dir && root $fileName",
-        // "c": "cd $dir && gcc $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
-    },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#426f6f",
         "activityBar.background": "#426f6f",

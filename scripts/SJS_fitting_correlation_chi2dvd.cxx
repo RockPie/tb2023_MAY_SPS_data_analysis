@@ -7,8 +7,10 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    int run_number = 2806;
-    int n_dots = 150;
+    int run_number = 2798;
+    int n_dots = 2400;
+    int n_parallel = 10;
+    double max_x_y_axis = 110000;
 
     // * File path
     auto file_CAEN_path             = SJUtil::create_filename_CAEN(
@@ -26,10 +28,10 @@ int main(int argc, char* argv[]){
     auto file_mixed_fitting_path    = SJUtil::create_filename("../cachedFiles", 
         DEFAULT_PREFIX_ROOT, run_number, "_mixed_fit_res", DEFAULT_EXTENSION_ROOT);
 
-    int n_parallel = 8;
+
     std::vector<std::string> file_unbinned_file_name_array;
     for (int i = 0; i < n_parallel; i++){
-        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
+        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_ho_fit_result_" + std::to_string(i+1) + ".root";
         file_unbinned_file_name_array.push_back(file_unbinned_file_name);
     }
 
@@ -132,10 +134,20 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_integral_chi2_3;
     std::vector<double> fit_integral_chi2_4;
 
-    const double chi2_ndf_cut0 = 10000;
-    const double chi2_ndf_cut1 = 15000;
-    const double chi2_ndf_cut2 = 20000;
-    const double chi2_ndf_cut3 = 30000;
+        // * Automatically find the best chi2_ndf cut
+    // * to divide the data into 5 groups evenly
+    for (int i = 0; i < n_parallel; i++){
+        for (int j = 0; j < n_dots; j++){
+            chi2_ndf.push_back(chi2_ndf_parallel[i]->at(j));
+        }
+    }
+
+    auto chi2_ndf_sorted = chi2_ndf;
+    std::sort(chi2_ndf_sorted.begin(), chi2_ndf_sorted.end());
+    auto chi2_ndf_cut0 = chi2_ndf_sorted.at(n_dots*n_parallel / 5);
+    auto chi2_ndf_cut1 = chi2_ndf_sorted.at(n_dots*n_parallel * 2 / 5);
+    auto chi2_ndf_cut2 = chi2_ndf_sorted.at(n_dots*n_parallel * 3 / 5);
+    auto chi2_ndf_cut3 = chi2_ndf_sorted.at(n_dots*n_parallel * 4 / 5);
 
     std::vector<double> chn_sum_merror_0;
     std::vector<double> chn_sum_merror_1;
@@ -148,11 +160,6 @@ int main(int argc, char* argv[]){
     std::vector<double> fit_integral_merror_2;
     std::vector<double> fit_integral_merror_3;
     std::vector<double> fit_integral_merror_4;
-
-    const double max_error_cut0 = 600;
-    const double max_error_cut1 = 800;
-    const double max_error_cut2 = 1000;
-    const double max_error_cut3 = 1300;
 
 
     for (int i = 0; i < n_parallel; i++){
@@ -194,33 +201,6 @@ int main(int argc, char* argv[]){
                         else {
                             chn_sum_chi2_4.push_back(chn_sum_parallel[i]->at(j));
                             fit_integral_chi2_4.push_back(fit_integral_parallel[i]->at(j));
-                        }
-                    }
-                }
-            }
-
-            if (max_error_parallel[i]->at(j) < max_error_cut0){
-                chn_sum_merror_0.push_back(chn_sum_parallel[i]->at(j));
-                fit_integral_merror_0.push_back(fit_integral_parallel[i]->at(j));
-            }
-            else {
-                if (max_error_parallel[i]->at(j) < max_error_cut1){
-                    chn_sum_merror_1.push_back(chn_sum_parallel[i]->at(j));
-                    fit_integral_merror_1.push_back(fit_integral_parallel[i]->at(j));
-                }
-                else {
-                    if (max_error_parallel[i]->at(j) < max_error_cut2){
-                        chn_sum_merror_2.push_back(chn_sum_parallel[i]->at(j));
-                        fit_integral_merror_2.push_back(fit_integral_parallel[i]->at(j));
-                    }
-                    else {
-                        if (max_error_parallel[i]->at(j) < max_error_cut3){
-                            chn_sum_merror_3.push_back(chn_sum_parallel[i]->at(j));
-                            fit_integral_merror_3.push_back(fit_integral_parallel[i]->at(j));
-                        }
-                        else {
-                            chn_sum_merror_4.push_back(chn_sum_parallel[i]->at(j));
-                            fit_integral_merror_4.push_back(fit_integral_parallel[i]->at(j));
                         }
                     }
                 }
@@ -317,18 +297,18 @@ int main(int argc, char* argv[]){
     LOG(DEBUG) << "Drawing...";
 
 
-    scatter_chi2_0->SetTitle("Integral vs. Channel Sum");
+    scatter_chi2_0->SetTitle("Channel Sum vs. Integral");
     scatter_chi2_0->GetXaxis()->SetTitle("Integrated Charge [ADC]");
     scatter_chi2_0->GetYaxis()->SetTitle("Channel Sum [ADC]");
-    scatter_chi2_4->SetTitle("Integral vs. Channel Sum");
+    scatter_chi2_4->SetTitle("Channel Sum vs. Integral");
     scatter_chi2_4->GetXaxis()->SetTitle("Integrated Charge [ADC]");
     scatter_chi2_4->GetYaxis()->SetTitle("Channel Sum [ADC]");
 
 
-    scatter_chi2_0->GetXaxis()->SetRangeUser(0, 110000);
-    scatter_chi2_0->GetYaxis()->SetRangeUser(0, 110000);
-    scatter_chi2_4->GetXaxis()->SetRangeUser(0, 110000);
-    scatter_chi2_4->GetYaxis()->SetRangeUser(0, 110000);
+    scatter_chi2_0->GetXaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_chi2_0->GetYaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_chi2_4->GetXaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_chi2_4->GetYaxis()->SetRangeUser(0, max_x_y_axis);
 
     scatter_merror_0->SetTitle("Integral vs. Channel Sum");
     scatter_merror_0->GetXaxis()->SetTitle("Integrated Charge [ADC]");
@@ -338,10 +318,10 @@ int main(int argc, char* argv[]){
     scatter_merror_4->GetYaxis()->SetTitle("Channel Sum [ADC]");
 
 
-    scatter_merror_0->GetXaxis()->SetRangeUser(0, 110000);
-    scatter_merror_0->GetYaxis()->SetRangeUser(0, 110000);
-    scatter_merror_4->GetXaxis()->SetRangeUser(0, 110000);
-    scatter_merror_4->GetYaxis()->SetRangeUser(0, 110000);
+    scatter_merror_0->GetXaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_merror_0->GetYaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_merror_4->GetXaxis()->SetRangeUser(0, max_x_y_axis);
+    scatter_merror_4->GetYaxis()->SetRangeUser(0, max_x_y_axis);
 
     scatter_chi2_0->SetMarkerStyle(20);
     scatter_chi2_1->SetMarkerStyle(20);
@@ -377,17 +357,11 @@ int main(int argc, char* argv[]){
     scatter_merror_4->SetMarkerColorAlpha(kPink-2,    0.7);
 
     // add info on top right
-    // scatter_chi2_4->Draw("AP");
-    // scatter_chi2_3->Draw("P");
-    // scatter_chi2_2->Draw("P");
-    // scatter_chi2_1->Draw("P");
-    // scatter_chi2_0->Draw("P");
-
-    scatter_merror_4->Draw("AP");
-    scatter_merror_3->Draw("P");
-    scatter_merror_2->Draw("P");
-    scatter_merror_1->Draw("P");
-    scatter_merror_0->Draw("P");
+    scatter_chi2_4->Draw("AP");
+    scatter_chi2_3->Draw("P");
+    scatter_chi2_2->Draw("P");
+    scatter_chi2_1->Draw("P");
+    scatter_chi2_0->Draw("P");
 
 
 
@@ -427,24 +401,18 @@ int main(int argc, char* argv[]){
     auto str_chi2_3 = std::to_string(rate_chi2_3) + "% Worse";
     auto str_chi2_4 = std::to_string(rate_chi2_4) + "% Worst";
 
-    auto str_merror_0 = std::to_string(rate_merror_0) + "% Best";
-    auto str_merror_1 = std::to_string(rate_merror_1) + "% Better";
-    auto str_merror_2 = std::to_string(rate_merror_2) + "% Middle";
-    auto str_merror_3 = std::to_string(rate_merror_3) + "% Worse";
-    auto str_merror_4 = std::to_string(rate_merror_4) + "% Worst";
-
-    legend->AddEntry(scatter_chi2_0, str_merror_0.c_str(), "p");
-    legend->AddEntry(scatter_chi2_1, str_merror_1.c_str(), "p");
-    legend->AddEntry(scatter_chi2_2, str_merror_2.c_str(), "p");
-    legend->AddEntry(scatter_chi2_3, str_merror_3.c_str(), "p");
-    legend->AddEntry(scatter_chi2_4, str_merror_4.c_str(), "p");
+    legend->AddEntry(scatter_chi2_0, str_chi2_0.c_str(), "p");
+    legend->AddEntry(scatter_chi2_1, str_chi2_1.c_str(), "p");
+    legend->AddEntry(scatter_chi2_2, str_chi2_2.c_str(), "p");
+    legend->AddEntry(scatter_chi2_3, str_chi2_3.c_str(), "p");
+    legend->AddEntry(scatter_chi2_4, str_chi2_4.c_str(), "p");
 
     legend->Draw();
 
     c->SetGrid();
     // c->SaveAs("../pics/integral_channelSum.png");
     LOG(INFO) << "Saving figure...";
-    c->SaveAs("../pics/temp6.png");
+    c->SaveAs("../pics/tempEnergyInt_11_ho.png");
 
     delete tex;
     delete tex2;

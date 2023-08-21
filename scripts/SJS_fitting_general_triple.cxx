@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2804;
+    int run_number = 2798;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
@@ -173,35 +173,39 @@ int main(int argc, char* argv[]){
 
         // * Getting initial parameters
         auto initial_params = SJUtil::map_max_point_index(_target_event);
-        auto main_gaussian_initial_amp = initial_params[2] * 0.85;
+        auto main_gaussian_initial_amp = initial_params[2] * 0.70;
         auto sub_gaussian_initial_amp  = initial_params[2] * 0.15;
+        auto peak_gaussian_initial_amp = initial_params[2] * 0.15;
         auto main_gaussian_initial_x0  = initial_params[0];
         auto main_gaussian_initial_y0  = initial_params[1];
         auto sub_gaussian_initial_x0   = initial_params[0];
         auto sub_gaussian_initial_y0   = initial_params[1];
+        auto peak_gaussian_initial_x0  = initial_params[0];
+        auto peak_gaussian_initial_y0  = initial_params[1];
 
-        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
+        TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::triple_gaussian2D, 0, 105, 0, 105, fit_param_num);
         gaussianFunc->SetParameters(
-            main_gaussian_initial_x0,   main_gaussian_initial_y0,   3, 3,
-            sub_gaussian_initial_x0,    sub_gaussian_initial_y0,    8, 8,
-            main_gaussian_initial_amp,  sub_gaussian_initial_amp
+            main_gaussian_initial_x0,   main_gaussian_initial_y0,   5,
+            sub_gaussian_initial_x0,    sub_gaussian_initial_y0,   20, 1,
+            main_gaussian_initial_amp,  sub_gaussian_initial_amp, peak_gaussian_initial_amp
         );
 
         gaussianFunc->SetParLimits(0, 0, 105);
         gaussianFunc->SetParLimits(1, 0, 105);
         gaussianFunc->SetParLimits(2, 0, 50);
-        gaussianFunc->SetParLimits(3, 0, 50);
+        gaussianFunc->SetParLimits(3, 0, 105);
         gaussianFunc->SetParLimits(4, 0, 105);
-        gaussianFunc->SetParLimits(5, 0, 105);
+        gaussianFunc->SetParLimits(5, 0, 50);
         gaussianFunc->SetParLimits(6, 0, 50);
-        gaussianFunc->SetParLimits(7, 0, 50);
-        gaussianFunc->SetParLimits(8, 0, 1e6);
-        gaussianFunc->SetParLimits(9, 0, 1e6);
+        gaussianFunc->SetParLimits(7, 0, 1000000);
+        gaussianFunc->SetParLimits(8, 0, 1000000);
+        gaussianFunc->SetParLimits(9, 0, 1000000);
+
 
         gaussianFunc->SetParNames(
-            "x0_1", "y0_1", "sigma_x_1", "sigma_y_1",
-            "x0_2", "y0_2", "sigma_x_2", "sigma_y_2",
-            "amplitude1", "amplitude2"
+            "x0_1", "y0_1", "sigma_1",
+            "x0_2", "y0_2", "sigma_2", "sigma_3",
+            "amp_1", "amp_2", "amp_3"
         );
 
         gaussianFunc->SetLineColor(kRed);
@@ -216,6 +220,8 @@ int main(int argc, char* argv[]){
         double fit_res_sigma_y_1 = 0;
         double fit_res_sigma_x_2 = 0;
         double fit_res_sigma_y_2 = 0;
+        double fit_res_sigma_x_3 = 0;
+        double fit_res_sigma_y_3 = 0;
         double fit_res_x0_1 = 0;
         double fit_res_y0_1 = 0;
         double fit_res_x0_2 = 0;
@@ -226,16 +232,17 @@ int main(int argc, char* argv[]){
         if (fit_res == 0) {
             total_fit_success++;
             fit_res_integral = gaussianFunc->Integral(0, 105, 0, 105);
-            fit_res_amp1 = gaussianFunc->GetParameter(8);
-            fit_res_amp2 = gaussianFunc->GetParameter(9);
-            fit_res_sigma_x_1 = gaussianFunc->GetParameter(2);
-            fit_res_sigma_y_1 = gaussianFunc->GetParameter(3);
-            fit_res_sigma_x_2 = gaussianFunc->GetParameter(6);
-            fit_res_sigma_y_2 = gaussianFunc->GetParameter(7);
+            fit_res_amp1 = gaussianFunc->GetParameter(7);
+            fit_res_amp2 = gaussianFunc->GetParameter(8);
             fit_res_x0_1 = gaussianFunc->GetParameter(0);
             fit_res_y0_1 = gaussianFunc->GetParameter(1);
-            fit_res_x0_2 = gaussianFunc->GetParameter(4);
-            fit_res_y0_2 = gaussianFunc->GetParameter(5);
+            fit_res_x0_2 = gaussianFunc->GetParameter(3);
+            fit_res_y0_2 = gaussianFunc->GetParameter(4);
+            fit_res_sigma_x_1 = gaussianFunc->GetParameter(2);
+            fit_res_sigma_y_1 = gaussianFunc->GetParameter(2);
+            fit_res_sigma_x_2 = gaussianFunc->GetParameter(5);
+            fit_res_sigma_y_2 = gaussianFunc->GetParameter(5);
+
 
             auto _fit_sigma_1 = std::sqrt(fit_res_sigma_x_1 * fit_res_sigma_x_1 + fit_res_sigma_y_1 * fit_res_sigma_y_1);
             auto _fit_sigma_2 = std::sqrt(fit_res_sigma_x_2 * fit_res_sigma_x_2 + fit_res_sigma_y_2 * fit_res_sigma_y_2);
@@ -300,12 +307,12 @@ int main(int argc, char* argv[]){
     delete builder;
     TFile *_save_file;
     if (job_index != 0){    
-        auto run_info = "Run_" + std::to_string(run_number) + "_ho_fit_result_" + std::to_string(job_index);    
+        auto run_info = "Run_" + std::to_string(run_number) + "_trp_fit_result_" + std::to_string(job_index);    
         auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
         _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
     else {
-        auto run_info = "Run_" + std::to_string(run_number) + "_fit_result";
+        auto run_info = "Run_" + std::to_string(run_number) + "_trp_fit_result";
         auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
         _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
     }
