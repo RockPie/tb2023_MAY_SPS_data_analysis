@@ -1,9 +1,9 @@
-# SJ's CAEN data analysis project
+# SJ's CAEN data analysis code
 
 Shihai J.
 Niels Bohr Institute, University of Copenhagen
 
-- [SJ's CAEN data analysis project](#sjs-caen-data-analysis-project)
+- [SJ's CAEN data analysis code](#sjs-caen-data-analysis-code)
   - [1. Typical workflow](#1-typical-workflow)
     - [a. Read data from original text file and write to root frames file](#a-read-data-from-original-text-file-and-write-to-root-frames-file)
     - [b. Open a root frames file and use event builder to reconstruct events](#b-open-a-root-frames-file-and-use-event-builder-to-reconstruct-events)
