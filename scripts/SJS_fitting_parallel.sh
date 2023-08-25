@@ -6,7 +6,7 @@ event_total=100000
 
 # Function to execute the command
 execute_command() {
-    ../build/SJS_fitting_general_triple_main -n $1 -t $2 -e $3
+    ../build/SJS_fitting_general_main -n $1 -t $2 -e $3
 }
 
 # Export the function so it can be called by xargs

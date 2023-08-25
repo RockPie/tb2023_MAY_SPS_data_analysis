@@ -135,6 +135,8 @@ int main(int argc, char* argv[]){
         auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, LG_errors_Multipled, mapping_coords);
         auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 0);
         auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 0);
+        auto _twoD_hg_values_NC     = SJUtil::geo_cutout_data(_twoD_hg_values_N, 20, 85, 25, 70);
+        auto _twoD_lg_values_NC     = SJUtil::geo_cutout_data(_twoD_lg_values_N, 20, 85, 25, 70);
         auto _target_event_N          = SJUtil::substitued_data_error(
             _twoD_hg_values_N, 
             _twoD_lg_values_N,
@@ -334,6 +336,8 @@ int main(int argc, char* argv[]){
 
     tree->Write();
     _save_file->Close();
+    // print save file path
+    LOG(INFO) << "Saved to " << _save_file->GetName();
 
     LOG(INFO) << "Finished fitting and plotting";
     auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);

@@ -389,6 +389,27 @@ namespace SJUtil{
     };
 
     template <typename T>
+    DataErrorSet2D<T> geo_cutout_data(const DataErrorSet2D<T> & _mapped_data, Short_t _x_min, Short_t _x_max, Short_t _y_min, Short_t _y_max){
+        auto _original_data_length = _mapped_data.value_vec.size();
+        DataErrorSet2D<T> _cutted_data;
+
+        for (auto i = 0; i < _original_data_length; i++) {
+            auto _original_x = _mapped_data.x_vec[i];
+            auto _original_y = _mapped_data.y_vec[i];
+            if (_original_x >= _x_min && _original_x <= _x_max && _original_y >= _y_min && _original_y <= _y_max) {
+                _cutted_data.value_vec.push_back(_mapped_data.value_vec[i]);
+                _cutted_data.x_vec.push_back(_original_x);
+                _cutted_data.y_vec.push_back(_original_y);
+                _cutted_data.error_vec.push_back(_mapped_data.error_vec[i]);
+            }
+        }
+        auto _cutted_data_length = _cutted_data.value_vec.size();
+        // LOG_IF(_cutted_data_length < 10, WARNING) << "Cutted data length is too small: " << _cutted_data_length;
+
+        return _cutted_data;
+    };
+
+    template <typename T>
     DataSet2D<T> substitued_data(
         const DataSet2D<T> & _hg_mapped_data,
         const DataSet2D<T> & _lg_mapped_data,

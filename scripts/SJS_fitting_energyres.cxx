@@ -6,10 +6,10 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    const int    run_number         = 2806;
-    const int    n_parallel         = 10;
-    const int    n_bins             = 200;
-    const int    hist_xmax          = 100000;
+    const int    run_number             = 2804;
+    const int    n_parallel             = 10;
+    const int    n_bins                 = 200;
+    const int    hist_xmax              = 40000;
     const bool   is_chi2_filtering      = false;
     const double chi2_ndf_threshold     = 200;
     const bool   is_sigma2_filtering    = false;
@@ -47,8 +47,8 @@ int main(int argc, char* argv[]){
     // * Fit range for run 2804
     // const double fit_xmin   = 7000;
     // const double fit_xmax   = 14000;
-    // const double fit_xmin   = 7500;
-    // const double fit_xmax   = 16000;
+    const double fit_xmin   = 7500;
+    const double fit_xmax   = 16000;
     // * Fit range for run 2805
     // const double fit_xmin   = 3500;
     // const double fit_xmax   = 9000;
@@ -57,28 +57,13 @@ int main(int argc, char* argv[]){
     // * Fit range for run 2806
     // const double fit_xmin   = 27000;
     // const double fit_xmax   = 45000;
-    const double fit_xmin   = 28000;
-    const double fit_xmax   = 46000;
+    // const double fit_xmin   = 28000;
+    // const double fit_xmax   = 46000;
 
     // * File path
-    auto file_CAEN_path             = SJUtil::create_filename_CAEN(
-            "../dataFiles",    run_number);
-    auto file_root_frames_path      = SJUtil::create_filename_frames(
-            "../cachedFiles",  run_number);
-    auto file_root_events_path      = SJUtil::create_filename_events(
-            "../cachedFiles",  run_number);
-    auto file_mapping_path          = "../dataFiles/Mapping_tb2023SPS.csv";
-    auto file_root_results_path     = SJUtil::create_filename_results(
-            "../cachedFiles",  run_number);
-    auto file_pedestal_path         = "../dataFiles/Pedestal_tb_2023SPS.csv";
-    auto file_original_fitting_path = SJUtil::create_filename("../cachedFiles",     
-        DEFAULT_PREFIX_ROOT, run_number, "_fit_res", DEFAULT_EXTENSION_ROOT);
-    auto file_mixed_fitting_path    = SJUtil::create_filename("../cachedFiles", 
-        DEFAULT_PREFIX_ROOT, run_number, "_mixed_fit_res", DEFAULT_EXTENSION_ROOT);
-
     std::vector<std::string> file_unbinned_file_name_array;
     for (int i = 0; i < n_parallel; i++){
-        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
+        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_ho_fit_result_" + std::to_string(i+1) + ".root";
         file_unbinned_file_name_array.push_back(file_unbinned_file_name);
     }
 
