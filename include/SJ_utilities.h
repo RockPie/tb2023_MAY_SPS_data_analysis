@@ -389,7 +389,7 @@ namespace SJUtil{
     };
 
     template <typename T>
-    DataErrorSet2D<T> geo_cutout_data(const DataErrorSet2D<T> & _mapped_data, Short_t _x_min, Short_t _x_max, Short_t _y_min, Short_t _y_max){
+    DataErrorSet2D<T> geo_cutout_data(const DataErrorSet2D<T> & _mapped_data, Double_t _x_min, Double_t _x_max, Double_t _y_min, Double_t _y_max){
         auto _original_data_length = _mapped_data.value_vec.size();
         DataErrorSet2D<T> _cutted_data;
 
@@ -520,5 +520,34 @@ namespace SJUtil{
             }
         }
         return _copy_hg_mapped_data;
+    };
+
+    template <typename T>
+    std::vector<Double_t> get_CoM(const DataErrorSet2D<T> &_data){
+        std::vector<Double_t> _CoM;
+        auto _data_length = _data.value_vec.size();
+        Double_t _sum_x = 0;
+        Double_t _sum_y = 0;
+        Double_t _sum_w = 0;
+        for (auto i=0; i<_data_length; i++){
+            auto _x = Double_t(_data.x_vec[i]);
+            auto _y = Double_t(_data.y_vec[i]);
+            auto _w = Double_t(_data.value_vec[i]);
+            _sum_x += _x * _w;
+            _sum_y += _y * _w;
+            _sum_w += _w;
+        }
+        _CoM.push_back(Double_t(_sum_x / _sum_w));
+        _CoM.push_back(Double_t(_sum_y / _sum_w));
+        return _CoM;
+    };
+
+    template <typename T>
+    bool geo_event_is_cut(const DataErrorSet2D<T> &_data, Double_t _x_min, Double_t _x_max, Double_t _y_min, Double_t _y_max){
+        auto _event_CoM = get_CoM(_data);
+        if (_event_CoM[0] >= _x_min && _event_CoM[0] <= _x_max && _event_CoM[1] >= _y_min && _event_CoM[1] <= _y_max){
+            return false;
+        }
+        return true;
     };
 }

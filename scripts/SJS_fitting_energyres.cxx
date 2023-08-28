@@ -6,7 +6,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     set_easylogger();   // * set easylogging++ configurations
-    const int    run_number             = 2804;
+    const int    run_number             = 2805;
     const int    n_parallel             = 10;
     const int    n_bins                 = 200;
     const int    hist_xmax              = 40000;
@@ -46,14 +46,14 @@ int main(int argc, char* argv[]){
     // const double fit_xmax = 19000;
     // * Fit range for run 2804
     // const double fit_xmin   = 7000;
-    // const double fit_xmax   = 14000;
-    const double fit_xmin   = 7500;
-    const double fit_xmax   = 16000;
+    // // const double fit_xmax   = 14000;
+    // const double fit_xmin   = 7500;
+    // const double fit_xmax   = 16000;
     // * Fit range for run 2805
     // const double fit_xmin   = 3500;
     // const double fit_xmax   = 9000;
-    // const double fit_xmin   = 3500;
-    // const double fit_xmax   = 11000;
+    const double fit_xmin   = 3500;
+    const double fit_xmax   = 11000;
     // * Fit range for run 2806
     // const double fit_xmin   = 27000;
     // const double fit_xmax   = 45000;
@@ -272,7 +272,7 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
 
-    auto _plot_name = "../pics/temp7_distribution" + std::to_string(run_number) + ".png";
+    auto _plot_name = "../pics/temp8_distribution" + std::to_string(run_number) + ".png";
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

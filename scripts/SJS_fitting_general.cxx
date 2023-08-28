@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2804;
+    int run_number = 2805;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
@@ -135,8 +135,8 @@ int main(int argc, char* argv[]){
         auto _twoD_lg_values        = SJUtil::map1d_to_2d(LG_charges_Multipled, LG_errors_Multipled, mapping_coords);
         auto _twoD_hg_values_N      = SJUtil::noise_subtracted_data(_twoD_hg_values, 0);
         auto _twoD_lg_values_N      = SJUtil::noise_subtracted_data(_twoD_lg_values, 0);
-        auto _twoD_hg_values_NC     = SJUtil::geo_cutout_data(_twoD_hg_values_N, 20, 85, 25, 70);
-        auto _twoD_lg_values_NC     = SJUtil::geo_cutout_data(_twoD_lg_values_N, 20, 85, 25, 70);
+        // auto _twoD_hg_values_NC     = SJUtil::geo_cutout_data(_twoD_hg_values_N, 33, 73, 27, 67);
+        // auto _twoD_lg_values_NC     = SJUtil::geo_cutout_data(_twoD_lg_values_N, 33, 73, 27, 67);
         auto _target_event_N          = SJUtil::substitued_data_error(
             _twoD_hg_values_N, 
             _twoD_lg_values_N,
@@ -145,6 +145,8 @@ int main(int argc, char* argv[]){
         );
         // auto _target_event = _target_event_N;
         auto _target_event = SJUtil::area_normalized_data(_target_event_N);
+        if (SJUtil::geo_event_is_cut(_target_event, 53.22, 58.60, 43.96, 49.34))
+            continue;
         // auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
         // auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
 
