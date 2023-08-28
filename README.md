@@ -1,11 +1,10 @@
-# SJ's CAEN data analysis code
+# SJ's CAEN data analysis scripts
 
 Shihai J.
-Niels Bohr Institute, University of Copenhagen
 
-- [SJ's CAEN data analysis code](#sjs-caen-data-analysis-code)
+- [SJ's CAEN data analysis scripts](#sjs-caen-data-analysis-scripts)
   - [1. Typical workflow](#1-typical-workflow)
-    - [a. Read data from original text file and write to root frames file](#a-read-data-from-original-text-file-and-write-to-root-frames-file)
+    - [a. Read data from the original text file and write to the root frames file](#a-read-data-from-the-original-text-file-and-write-to-the-root-frames-file)
     - [b. Open a root frames file and use event builder to reconstruct events](#b-open-a-root-frames-file-and-use-event-builder-to-reconstruct-events)
     - [c. Read a mapping file](#c-read-a-mapping-file)
     - [d. Read a mapping file and generate x,y coordinates](#d-read-a-mapping-file-and-generate-xy-coordinates)
@@ -20,7 +19,7 @@ Niels Bohr Institute, University of Copenhagen
 
 ![workflow](./Architecture.drawio.png)
 
-### a. Read data from original text file and write to root frames file
+### a. Read data from the original text file and write to the root frames file
 
 ```mermaid
 graph LR
@@ -208,7 +207,7 @@ auto _target_event        =SJUtil::substitued_data(
 );
 ```
 
-Here the `_twoD_hg_values` and `_twoD_lg_values` are the 2-D data point sets of the HG and LG charges. The `_twoD_hg_values_N` and `_twoD_lg_values_N` are the noise-subtracted data. 
+Here the `_twoD_hg_values` and `_twoD_lg_values` are the 2-D data point sets of the HG and LG charges. The noise-subtracted data are the `_twoD_hg_values_N` and `_twoD_lg_values_N`. 
 
 <div style="border: 1px solid #faebcc; background:#fcf8e3; color:#8a6d3b; padding: .75rem 1.25rem; border-radius: .25rem;"><b>Important:</b> The SJUtil::noise_subtracted_data will also be used to subtract data points under 0 caused by pedestal-subtraction </div>
 
@@ -216,7 +215,7 @@ The `_twoD_hg_values_NA` and `_twoD_lg_values_NA` are the area-normalized data. 
 
 <div style="border: 1px solid #faebcc; background:#fcf8e3; color:#8a6d3b; padding: .75rem 1.25rem; border-radius: .25rem;"><b>Important:</b> The normalization will make data points in the outer module raised by 49/25</div>
 
-Because the LG values are already been multiplied by the gain with the `SJUtil::gain_multiplication` function, the gain settings in `SJUtil::substitued_data` is set to `Double_t(1)`.
+Because the LG values are already multiplied by the gain with the `SJUtil::gain_multiplication` function, the gain settings in `SJUtil::substitued_data` is set to `Double_t(1)`.
 
 
 ## 3. Parallel bash script
