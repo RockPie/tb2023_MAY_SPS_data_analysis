@@ -5,6 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
+    
     set_easylogger();   // * set easylogging++ configurations
     const int    run_number             = 2805;
     const int    n_parallel             = 10;
@@ -16,6 +17,8 @@ int main(int argc, char* argv[]){
     const double sigma2_threshold       = 1000;
     const bool   is_distance_filtering  = false;
     const double distance_threshold     = 10;
+
+    auto _plot_name = "../pics/tempc_distribution" + std::to_string(run_number) + ".png";
     // * Fit range for run 2798
     // const double fit_xmin   = 38000;
     // const double fit_xmax   = 61000;
@@ -272,7 +275,7 @@ int main(int argc, char* argv[]){
     // Transparent background
     c->SetGrid();
 
-    auto _plot_name = "../pics/temp8_distribution" + std::to_string(run_number) + ".png";
+    
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

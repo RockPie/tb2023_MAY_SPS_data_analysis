@@ -5,16 +5,17 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2805;
+    int run_number = 2801;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
-    const int orginal_eventNum = 100;
+    const int orginal_eventNum = 100000;
     const double default_error = 7.37;
+    double local_max_threshold = 400;
     int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
-    while ((opt = getopt(argc, argv, "n:t:e:")) != -1){
+    while ((opt = getopt(argc, argv, "n:t:e:h:")) != -1){
         switch (opt){
             case 'n':
                 job_index = atoi(optarg);
@@ -25,11 +26,16 @@ int main(int argc, char* argv[]){
             case 'e':
                 eventNum = atoi(optarg);
                 break;
+            case 'h':
+                local_max_threshold = atoi(optarg);
+                break;
             default:
                 LOG(ERROR) << "Wrong arguments!";
                 return 1;
         }
     }
+
+    LOG(INFO) << "Local max threshold: " << local_max_threshold;
 
     bool is_in_parallel = eventNum != orginal_eventNum;
 
@@ -99,7 +105,10 @@ int main(int argc, char* argv[]){
     std::vector<Double_t> chn_sum;
     std::vector<Double_t> chn_sum_N;
 
-    //* multi CPU fitting
+    // * Clustering infomation
+    std::vector<Int_t> cluster_tag_num;
+
+    // * multi CPU fitting
 
     auto first_event = 0;
 
@@ -109,17 +118,18 @@ int main(int argc, char* argv[]){
     }
 
     eventNum_progress_divider = eventNum / 10;
+    bool example_event_taken = false;
 
-    for (auto i = first_event; i < eventNum; i++){
+    for (auto _event_index = first_event; _event_index < eventNum; _event_index++){
         total_events++;
-        if (!eventValidPtr->at(i)) continue;
-        if (i % eventNum_progress_divider == 0 && (job_index == 1 || !is_in_parallel))
-            LOG(INFO) << "Processing event " << i << " / " << eventNum;
+        if (!eventValidPtr->at(_event_index)) continue;
+        if (_event_index % eventNum_progress_divider == 0 && (job_index == 1 || !is_in_parallel))
+            LOG(INFO) << "Processing event " << _event_index << " / " << eventNum;
         
-        auto HG_charges     = eventArrayPtr->at(i).HG_charges;
-        auto LG_charges     = eventArrayPtr->at(i).LG_charges;
-        auto _currentName   = Form("event_%d", i);
-        auto _currentTitle  = Form("Event %d", i);
+        auto HG_charges     = eventArrayPtr->at(_event_index).HG_charges;
+        auto LG_charges     = eventArrayPtr->at(_event_index).LG_charges;
+        auto _currentName   = Form("event_%d", _event_index);
+        auto _currentTitle  = Form("Event %d", _event_index);
         auto Canvas_Ptr     = new TCanvas(
             _currentName, _currentTitle, 200, 10, 700, 500);
 
@@ -144,11 +154,31 @@ int main(int argc, char* argv[]){
             Double_t(1.0)
         );
         // auto _target_event = _target_event_N;
+        // LOG(DEBUG) << "event: " << _event_index << " has " << _target_event_N.value_vec.size() << " cells";
         auto _target_event = SJUtil::area_normalized_data(_target_event_N);
-        // if (SJUtil::geo_event_is_cut(_target_event, 53.22, 58.60, 43.96, 49.34))
-        //     continue;
-        // auto _twoD_hg_values_NA     = SJUtil::area_normalized_data(_twoD_hg_values_N);
-        // auto _twoD_lg_values_NA     = SJUtil::area_normalized_data(_twoD_lg_values_N);
+        auto _tag_num_buffer = 0;
+        auto _cluster_CA = new cluster_CA();
+        _cluster_CA->assign_adc_to_cells(&_target_event);
+        _cluster_CA->set_local_max_threshold(local_max_threshold);
+        if (_cluster_CA->find_local_maximum()) {
+            int _iteration_cnt = 0;
+            while (!_cluster_CA->iterate()){
+                _iteration_cnt++;
+            }
+
+            _tag_num_buffer = _cluster_CA->get_n_tags();
+        } else {
+            // LOG(WARNING) << "No local maximum found in event " << _event_index;
+            _tag_num_buffer = 0;
+        }
+        
+        // ! only keep events with exactly 1 local maximum
+        // if (_cluster_CA->get_n_tags() != 1) continue;
+        // if(_cluster_CA->get_n_tags() >= 5 && !example_event_taken) {
+        //     example_event_taken = true;
+        //     _cluster_CA->save_event_to_csv(&_target_event, "example_event.csv");
+        //     LOG(INFO) << "Example event saved to example_event.csv";
+        // }
 
         // auto _target_event = _twoD_hg_values_NA;
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
@@ -176,19 +206,25 @@ int main(int argc, char* argv[]){
         Graph_Sub_Ptr->SetMarkerStyle(21);
 
         // * Getting initial parameters
-        auto initial_params = SJUtil::map_max_point_index(_target_event);
-        auto main_gaussian_initial_amp = initial_params[2] * 0.85;
-        auto sub_gaussian_initial_amp  = initial_params[2] * 0.15;
-        auto main_gaussian_initial_x0  = initial_params[0];
-        auto main_gaussian_initial_y0  = initial_params[1];
-        auto sub_gaussian_initial_x0   = initial_params[0];
-        auto sub_gaussian_initial_y0   = initial_params[1];
+        // auto initial_params = SJUtil::map_max_point_index(_target_event);
+        // auto main_gaussian_initial_amp = initial_params[2] * 0.85;
+        // auto sub_gaussian_initial_amp  = initial_params[2] * 0.15;
+        // auto main_gaussian_initial_x0  = initial_params[0];
+        // auto main_gaussian_initial_y0  = initial_params[1];
+        // auto sub_gaussian_initial_x0   = initial_params[0];
+        // auto sub_gaussian_initial_y0   = initial_params[1];
 
         TF2 *gaussianFunc = new TF2("gaussianFunc", SJFunc::dual_gaussian2D, 0, 105, 0, 105, fit_param_num);
+        // gaussianFunc->SetParameters(
+        //     main_gaussian_initial_x0,   main_gaussian_initial_y0,   3, 3,
+        //     sub_gaussian_initial_x0,    sub_gaussian_initial_y0,    8, 8,
+        //     main_gaussian_initial_amp,  sub_gaussian_initial_amp
+        // );
+
         gaussianFunc->SetParameters(
-            main_gaussian_initial_x0,   main_gaussian_initial_y0,   3, 3,
-            sub_gaussian_initial_x0,    sub_gaussian_initial_y0,    8, 8,
-            main_gaussian_initial_amp,  sub_gaussian_initial_amp
+            0,0,3,3,
+            0,0,8,8,
+            0,0
         );
 
         gaussianFunc->SetParLimits(0, 0, 105);
@@ -212,7 +248,8 @@ int main(int argc, char* argv[]){
         gaussianFunc->SetLineWidth(2);
         gaussianFunc->SetFillColorAlpha(kBlue, 0.3);
 
-        auto fit_res = Graph_Ptr->Fit(gaussianFunc, "RQ");
+        // auto fit_res = Graph_Ptr->Fit(gaussianFunc, "RQ");
+        int fit_res = 0;
         double fit_res_integral = 0; 
         double fit_res_amp1 = 0;
         double fit_res_amp2 = 0;
@@ -274,9 +311,11 @@ int main(int argc, char* argv[]){
 
             max_error.push_back(max_error_val);
             chi2_ndf.push_back(chi2 / ndf);
-            max_chn_value.push_back(initial_params[2]);
+            // max_chn_value.push_back(initial_params[2]);
+            max_chn_value.push_back(0);
             chn_sum.push_back(sum);
             chn_sum_N.push_back(sumN);
+            cluster_tag_num.push_back(_tag_num_buffer);
         }
         else {
             
@@ -290,9 +329,9 @@ int main(int argc, char* argv[]){
                 Canvas_Ptr->Update();
                 Canvas_Ptr->WaitPrimitive();
                 Canvas_Ptr->Write();
-                LOG(DEBUG) << "Event " << i << " has chi2 / ndf = " << chi2 / ndf;
+                // LOG(DEBUG) << "Event " << _event_index << " has chi2 / ndf = " << chi2 / ndf;
         }
-        
+        delete _cluster_CA;
         delete Graph_Ptr;
         delete Canvas_Ptr;
     }
@@ -302,44 +341,59 @@ int main(int argc, char* argv[]){
 
     f->Close();
     delete builder;
-    TFile *_save_file;
-    if (job_index != 0){    
-        auto run_info = "Run_" + std::to_string(run_number) + "_ho_fit_result_" + std::to_string(job_index);    
-        auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
-        _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
-    }
-    else {
-        auto run_info = "Run_" + std::to_string(run_number) + "_fit_result";
-        auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
-        _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
+
+    // * Save cluster tag number to csv file
+    if (!is_in_parallel){
+        auto cluster_tag_num_csv_file_name = "../cachedFiles/cluster_sum_" + std::to_string(run_number) + "_thres" + std::to_string(int(local_max_threshold)) + ".csv";
+        std::ofstream cluster_tag_num_csv_file;
+        cluster_tag_num_csv_file.open(cluster_tag_num_csv_file_name);
+        cluster_tag_num_csv_file << "tag_num," << "channel_sum" << std::endl;
+        for (auto i = 0; i < cluster_tag_num.size(); i++){
+            cluster_tag_num_csv_file << cluster_tag_num[i] << "," << chn_sum[i] << std::endl;
+        }
+        cluster_tag_num_csv_file.close();
     }
     
-    // * Write all vector<double>
-    TTree *tree = new TTree("fittree", "Fit Tree");
-    tree->Branch("fit_integral", &fit_integral);
-    tree->Branch("fit_amp1", &fit_amp1);
-    tree->Branch("fit_amp2", &fit_amp2);
-    tree->Branch("fit_sigma1", &fit_sigma1);
-    tree->Branch("fit_sigma2", &fit_sigma2);
-    tree->Branch("fit_x0_1", &fit_x0_1);
-    tree->Branch("fit_y0_1", &fit_y0_1);
-    tree->Branch("fit_x0_2", &fit_x0_2);
-    tree->Branch("fit_y0_2", &fit_y0_2);
-    tree->Branch("fit_sigmax_1", &fit_sigmax_1);
-    tree->Branch("fit_sigmay_1", &fit_sigmay_1);
-    tree->Branch("fit_sigmax_2", &fit_sigmax_2);
-    tree->Branch("fit_sigmay_2", &fit_sigmay_2);
-    tree->Branch("chi2_ndf", &chi2_ndf);
-    tree->Branch("max_error", &max_error);
-    tree->Branch("max_chn_value", &max_chn_value);
-    tree->Branch("chn_sum", &chn_sum);
-    tree->Branch("chn_sum_N", &chn_sum_N);
-    tree->Fill();
 
-    tree->Write();
-    _save_file->Close();
-    // print save file path
-    LOG(INFO) << "Saved to " << _save_file->GetName();
+
+    // TFile *_save_file;
+    // if (job_index != 0){    
+    //     auto run_info = "Run_" + std::to_string(run_number) + "_ho_fit_result_" + std::to_string(job_index);    
+    //     auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
+    //     _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
+    // }
+    // else {
+    //     auto run_info = "Run_" + std::to_string(run_number) + "_fit_result";
+    //     auto _save_file_name = "../cachedFiles/" + run_info +  ".root";
+    //     _save_file = new TFile(_save_file_name.c_str(), "RECREATE");
+    // }
+    
+    // // * Write all vector<double>
+    // TTree *tree = new TTree("fittree", "Fit Tree");
+    // tree->Branch("fit_integral", &fit_integral);
+    // tree->Branch("fit_amp1", &fit_amp1);
+    // tree->Branch("fit_amp2", &fit_amp2);
+    // tree->Branch("fit_sigma1", &fit_sigma1);
+    // tree->Branch("fit_sigma2", &fit_sigma2);
+    // tree->Branch("fit_x0_1", &fit_x0_1);
+    // tree->Branch("fit_y0_1", &fit_y0_1);
+    // tree->Branch("fit_x0_2", &fit_x0_2);
+    // tree->Branch("fit_y0_2", &fit_y0_2);
+    // tree->Branch("fit_sigmax_1", &fit_sigmax_1);
+    // tree->Branch("fit_sigmay_1", &fit_sigmay_1);
+    // tree->Branch("fit_sigmax_2", &fit_sigmax_2);
+    // tree->Branch("fit_sigmay_2", &fit_sigmay_2);
+    // tree->Branch("chi2_ndf", &chi2_ndf);
+    // tree->Branch("max_error", &max_error);
+    // tree->Branch("max_chn_value", &max_chn_value);
+    // tree->Branch("chn_sum", &chn_sum);
+    // tree->Branch("chn_sum_N", &chn_sum_N);
+    // tree->Fill();
+
+    // tree->Write();
+    // _save_file->Close();
+    // // print save file path
+    // LOG(INFO) << "Saved to " << _save_file->GetName();
 
     LOG(INFO) << "Finished fitting and plotting";
     auto success_rate = Double_t(total_fit_success) / Double_t(total_valid_events);

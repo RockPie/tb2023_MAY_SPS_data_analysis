@@ -4,6 +4,7 @@
 #include "SJ_utilities.h"
 #include "SJ_plotting.h"
 #include "SJ_fitting.h"
+#include "SJ_cluster.h"
 
 #include <TH1.h>
 #include <TCanvas.h>

@@ -91,7 +91,7 @@ int main(int argc, char* argv[]){
 
     std::vector<std::string> file_unbinned_file_name_array;
     for (int i = 0; i < n_parallel; i++){
-        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_trp_fit_result_" + std::to_string(i+1) + ".root";
+        auto file_unbinned_file_name = "../cachedFiles/Run_" + std::to_string(run_number) + "_fit_result_" + std::to_string(i+1) + ".root";
         file_unbinned_file_name_array.push_back(file_unbinned_file_name);
     }
 
@@ -417,7 +417,7 @@ int main(int argc, char* argv[]){
     legend->SetBorderSize(1);
     //legend->Draw();
 
-    auto _plot_name = "../pics/temp2_histCompare" + std::to_string(run_number) + ".png";
+    auto _plot_name = "../pics/temp3_histCompare" + std::to_string(run_number) + ".png";
     c->SaveAs(_plot_name.c_str());
 
     auto _pass_rate = (double)_event_pass_chi2_cnt * 100 / (double)_total_event_cnt;

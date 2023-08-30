@@ -25,6 +25,7 @@ add_library(sketchprj1_lib SHARED
     src/SJ_utilities.cxx
     src/SJ_plotting.cxx
     src/SJ_fitting.cxx
+    src/SJ_cluster.cxx
     include/csv.h
     include/SJ_includes.h
 )
@@ -62,6 +63,7 @@ add_executable(SJS_readingIanData_main              ./scripts/SJS_readingIanData
 add_executable(SJS_fitting_histcompare_main         ./scripts/SJS_fitting_histcompare.cxx)
 add_executable(SJS_fitting_radial_main              ./scripts/SJS_fitting_radial.cxx)
 add_executable(SJS_CoM_calculation_main             ./scripts/SJS_CoM_calculation.cxx)
+add_executable(SJS_clustering_tb_main               ./scripts/SJS_clustering_tb.cxx)
 
 target_link_libraries(sum_analysis_main                     sketchprj1_lib)
 target_link_libraries(Sketch1_main                          sketchprj1_lib)
@@ -80,3 +82,4 @@ target_link_libraries(SJS_fitting_correlation_sigma_main    sketchprj1_lib)
 target_link_libraries(SJS_fitting_histcompare_main          sketchprj1_lib)
 target_link_libraries(SJS_fitting_radial_main               sketchprj1_lib)
 target_link_libraries(SJS_CoM_calculation_main              sketchprj1_lib)
+target_link_libraries(SJS_clustering_tb_main                sketchprj1_lib)

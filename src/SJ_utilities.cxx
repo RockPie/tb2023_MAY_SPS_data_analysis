@@ -107,8 +107,8 @@ std::vector<std::vector<Short_t>> SJUtil::generate_mapping_croodinate(
             break;
         }
         case 4:{
-            _x_base = 38;
-            _y_base = 66;
+            _x_base = 37;
+            _y_base = 67;
             break;
         }
         case 5:{
