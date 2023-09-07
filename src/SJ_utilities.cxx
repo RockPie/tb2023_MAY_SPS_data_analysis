@@ -8,7 +8,7 @@ char* SJUtil::create_filename(const char* _folder_path,  const char* _prefix, in
 
 std::vector<std::vector<Short_t>> SJUtil::read_mapping_csv_file(const char* _file_name) {
     LOG(INFO) << "Reading mapping file: " << _file_name;
-    if (!std::filesystem::exists(_file_name)) {
+    if (_file_name == nullptr) {
         LOG(ERROR) << "File not found: " << _file_name;
         return std::vector<std::vector<Short_t>>();
     }
@@ -36,7 +36,7 @@ std::vector<std::vector<Short_t>> SJUtil::read_mapping_csv_file(const char* _fil
 SJUtil::PedestalInfo SJUtil::read_pedestal_csv_file(const char* _file_name){
     LOG(INFO) << "Reading pedestal file: " << _file_name;
     SJUtil::PedestalInfo _pedestal_info;
-    if (!std::filesystem::exists(_file_name)) {
+    if (_file_name == nullptr) {
         LOG(ERROR) << "File not found: " << _file_name;
         return _pedestal_info;
     }

@@ -131,17 +131,25 @@ bool cluster_CA::find_local_maximum(void){
         if (cell->adc < local_max_threshold)
             continue;
         bool _is_local_maximum = true;
+        Double_t _neighbor_sum_adc = 0;
         for (auto j = 0; j < cells->size(); j++){
             if (i == j)
                 continue;
             auto cell2 = cells->at(j);
-            if (cell->get_distance_squared(*cell2) < 98){
+            if (cell->get_distance_squared(*cell2) < 99){
                 if (cell->adc < cell2->adc){
                     _is_local_maximum = false;
                     break;
                 }
+                _neighbor_sum_adc += cell2->adc;
+                // if (cell2->adc < local_max_threshold * 0.5){
+                //     _is_local_maximum = false;
+                //     break;
+                // }
             }
         }
+        if (_neighbor_sum_adc < local_max_threshold * 4)
+            _is_local_maximum = false;
         if (_is_local_maximum){
             tag_id_array.push_back(i);
             cell->set_local_maximum(i);
@@ -169,7 +177,7 @@ bool cluster_CA::iterate(void){
             if (i == j)
                 continue;
             auto cell2 = cells->at(j);
-            if (cell->get_distance_squared(*cell2) < 98){
+            if (cell->get_distance_squared(*cell2) < 99){
                 if (cell2->is_tagged()){
                     // LOG(DEBUG) << "Tagging cell (" << cell->x << ", " << cell->y << ") with tag " << cell2->tags.at(0) << ".";
                     for (auto k = 0; k < cell2->tags.size(); k++){

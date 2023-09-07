@@ -5,7 +5,7 @@ void set_easylogger(); // set easylogging++ configurations
 int main(int argc, char* argv[]){
     START_EASYLOGGINGPP(argc, argv);
     // * -n 1 - 10: index of this job
-    int run_number = 2801;
+    int run_number = 2798;
     // analyse input arguments
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     double local_max_threshold = 400;
     int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
-    while ((opt = getopt(argc, argv, "n:t:e:h:")) != -1){
+    while ((opt = getopt(argc, argv, "n:t:e:h:r:")) != -1){
         switch (opt){
             case 'n':
                 job_index = atoi(optarg);
@@ -28,6 +28,9 @@ int main(int argc, char* argv[]){
                 break;
             case 'h':
                 local_max_threshold = atoi(optarg);
+                break;
+            case 'r':
+                run_number = atoi(optarg);
                 break;
             default:
                 LOG(ERROR) << "Wrong arguments!";
@@ -156,6 +159,7 @@ int main(int argc, char* argv[]){
         // auto _target_event = _target_event_N;
         // LOG(DEBUG) << "event: " << _event_index << " has " << _target_event_N.value_vec.size() << " cells";
         auto _target_event = SJUtil::area_normalized_data(_target_event_N);
+        //auto _target_event = _target_event_N;
         auto _tag_num_buffer = 0;
         auto _cluster_CA = new cluster_CA();
         _cluster_CA->assign_adc_to_cells(&_target_event);
