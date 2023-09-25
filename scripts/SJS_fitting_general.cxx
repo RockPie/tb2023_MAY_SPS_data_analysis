@@ -66,6 +66,8 @@ int main(int argc, char* argv[]){
     LOG(DEBUG) << "slopeInfo size: " << slopeInfo.size();
 
     // * Main program
+
+    
     auto builder        = new CAEN_event_builder();
     builder->read_root_file2event_array(file_root_events_path);
     auto eventArrayPtr  = builder->get_event_array_ptr();

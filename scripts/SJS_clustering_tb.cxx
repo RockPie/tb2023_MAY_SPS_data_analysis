@@ -10,9 +10,9 @@ int main(int argc, char* argv[]){
     int opt;
     int job_index   = 0; // -n 1 - 10: index of this job
     int job_num     = 8; // -t 1 - 10: total number of jobs
-    const int orginal_eventNum = 100000;
+    const int orginal_eventNum = 100;
     const double default_error = 7.37;
-    double local_max_threshold = 400;
+    double _seed_threshold = 800;
     int eventNum    = orginal_eventNum; // -e 1 - 1000: number of events to be processed
 
     while ((opt = getopt(argc, argv, "n:t:e:h:r:")) != -1){
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
                 eventNum = atoi(optarg);
                 break;
             case 'h':
-                local_max_threshold = atoi(optarg);
+                _seed_threshold = atoi(optarg);
                 break;
             case 'r':
                 run_number = atoi(optarg);
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-    LOG(INFO) << "Local max threshold: " << local_max_threshold;
+    LOG(INFO) << "Local max threshold: " << _seed_threshold;
 
     bool is_in_parallel = eventNum != orginal_eventNum;
 
@@ -159,30 +159,51 @@ int main(int argc, char* argv[]){
         // auto _target_event = _target_event_N;
         // LOG(DEBUG) << "event: " << _event_index << " has " << _target_event_N.value_vec.size() << " cells";
         auto _target_event = SJUtil::area_normalized_data(_target_event_N);
-        //auto _target_event = _target_event_N;
+        // auto _target_event = _target_event_N;
         auto _tag_num_buffer = 0;
-        auto _cluster_CA = new cluster_CA();
-        _cluster_CA->assign_adc_to_cells(&_target_event);
-        _cluster_CA->set_local_max_threshold(local_max_threshold);
-        if (_cluster_CA->find_local_maximum()) {
-            int _iteration_cnt = 0;
-            while (!_cluster_CA->iterate()){
-                _iteration_cnt++;
-            }
+        // auto _cluster_CA = new cluster_CA();
+        // _cluster_CA->assign_adc_to_cells(&_target_event);
+        // _cluster_CA->set_local_max_threshold(local_max_threshold);
+        // if (_cluster_CA->find_local_maximum()) {
+        //     int _iteration_cnt = 0;
+        //     while (!_cluster_CA->iterate()){
+        //         _iteration_cnt++;
+        //     }
 
-            _tag_num_buffer = _cluster_CA->get_n_tags();
-        } else {
-            // LOG(WARNING) << "No local maximum found in event " << _event_index;
-            _tag_num_buffer = 0;
+        //     _tag_num_buffer = _cluster_CA->get_n_tags();
+        // } else {
+        //     // LOG(WARNING) << "No local maximum found in event " << _event_index;
+        //     _tag_num_buffer = 0;
+        // }
+
+        auto _cluster_MA = new cluster_MA();
+        _cluster_MA->assign_adc_to_cells(&_target_event);
+        _cluster_MA->set_seed_threshold(_seed_threshold);
+        _cluster_MA->set_aggregation_threshold(100);
+        _cluster_MA->set_neighbor_distance(99);
+        _cluster_MA->set_larger_neighbor_threshold(0);
+        // int _cluster_cnt = 0;
+        while (_cluster_MA->find_maxima()){
+            // _cluster_cnt++;
+            int _iteration_cnt = 0;
+            while(_cluster_MA->iterate()){
+                _iteration_cnt++;
+                _cluster_MA->cells_update();
+            }
+            //LOG(DEBUG) << "Iteration " << _iteration_cnt;
+            _cluster_MA->cells_update();
         }
+        _tag_num_buffer = _cluster_MA->get_n_tags();
+        
+        
         
         // ! only keep events with exactly 1 local maximum
         // if (_cluster_CA->get_n_tags() != 1) continue;
-        // if(_cluster_CA->get_n_tags() >= 5 && !example_event_taken) {
-        //     example_event_taken = true;
-        //     _cluster_CA->save_event_to_csv(&_target_event, "example_event.csv");
-        //     LOG(INFO) << "Example event saved to example_event.csv";
-        // }
+        if(_event_index == 14) {
+            example_event_taken = true;
+            _cluster_MA->save_event_to_csv(&_target_event, "example_event5.csv");
+            LOG(INFO) << "Example event" << _event_index << " saved to example_event3.csv";
+        }
 
         // auto _target_event = _twoD_hg_values_NA;
         if ( _target_event.value_vec.size() <= fit_param_num + 1)  
@@ -335,7 +356,7 @@ int main(int argc, char* argv[]){
                 Canvas_Ptr->Write();
                 // LOG(DEBUG) << "Event " << _event_index << " has chi2 / ndf = " << chi2 / ndf;
         }
-        delete _cluster_CA;
+        delete _cluster_MA;
         delete Graph_Ptr;
         delete Canvas_Ptr;
     }
@@ -347,8 +368,8 @@ int main(int argc, char* argv[]){
     delete builder;
 
     // * Save cluster tag number to csv file
-    if (!is_in_parallel){
-        auto cluster_tag_num_csv_file_name = "../cachedFiles/cluster_sum_" + std::to_string(run_number) + "_thres" + std::to_string(int(local_max_threshold)) + ".csv";
+    if (!is_in_parallel && false){
+        auto cluster_tag_num_csv_file_name = "../cachedFiles/cluster_sum_" + std::to_string(run_number) + "_seed" + std::to_string(int(_seed_threshold)) + ".csv";
         std::ofstream cluster_tag_num_csv_file;
         cluster_tag_num_csv_file.open(cluster_tag_num_csv_file_name);
         cluster_tag_num_csv_file << "tag_num," << "channel_sum" << std::endl;

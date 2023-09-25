@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
     // * Draw the first graph
     mg->Draw("AP");
     c1->Update();
-    // c1->SaveAs("../pics/HG_vs_LG.png");
+    c1->SaveAs("../pics/HG_vs_LG.png");
     // * Save slope and offset
     TFile *slope_offset_file = new TFile("../cachedFiles/slope_offset.root", "RECREATE");
     TTree *slope_offset_tree = new TTree("slope_offset_tree", "slope_offset_tree");

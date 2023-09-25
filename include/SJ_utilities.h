@@ -62,17 +62,31 @@ namespace SJUtil{
         std::vector<T> value_vec;
         /* error */
         std::vector<T> error_vec;
+        std::vector<Short_t> cell_size;
 
-        DataSet2D<T> operator*(int multiplier) const {
-           DataSet2D<T> result = *this;
+        DataErrorSet2D<T> operator+(const DataErrorSet2D<T>& rhs) const {
+            DataErrorSet2D<T> result = *this;
+            for (auto i = 0; i < result.value_vec.size(); i++) {
+                for (auto j = 0; j < rhs.value_vec.size(); j++) {
+                    if (result.x_vec[i] == rhs.x_vec[j] && result.y_vec[i] == rhs.y_vec[j]) {
+                        result.value_vec[i] += rhs.value_vec[j];
+                        result.error_vec[i] += rhs.error_vec[j];
+                    }
+                }
+            }
+            return result;
+        }
+
+        DataErrorSet2D<T> operator*(int multiplier) const {
+           DataErrorSet2D<T> result = *this;
            for (auto& value : result.value_vec) {
                value *= multiplier;
            }
            return result;
         }   
 
-        DataSet2D<T> operator*(double multiplier) const {
-           DataSet2D<T> result = *this;
+        DataErrorSet2D<T> operator*(double multiplier) const {
+           DataErrorSet2D<T> result = *this;
            for (auto& value : result.value_vec) {
                value = T(value * multiplier);
            }
@@ -231,6 +245,10 @@ namespace SJUtil{
                 _y_coord_array.push_back(_mapping_y_coord[_index]);
                 _z_coord_array.push_back(_1d_values[i]);
                 _z_error_array.push_back(_1d_errors[i]);
+                if (_mapping_x_coord[_index] >= 37  && _mapping_x_coord[_index] < 73 && _mapping_y_coord[_index] >= 37 && _mapping_y_coord[_index] < 73)
+                    _mapping_2d_array.cell_size.push_back(5);
+                else
+                    _mapping_2d_array.cell_size.push_back(7);
                 // LOG(DEBUG) << "Channel: " << i << " -> (" << _mapping_x_coord[_index] << ", " << _mapping_y_coord[_index] << ")";
             }
         }

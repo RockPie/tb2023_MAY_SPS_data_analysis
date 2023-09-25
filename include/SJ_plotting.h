@@ -10,6 +10,7 @@
 #include <TH2F.h>
 #include <TH3F.h>
 #include <TLine.h>
+#include <TStyle.h>
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -86,6 +87,8 @@ namespace SJPlot{
         // _graph_ptr->Draw("pcol");
         return _graph_ptr;
     };
+
+    TH2D* hist_2d(const SJUtil::DataErrorSet2D<Double_t> &_mapped_events, Double_t max_adc = -1);
 
     template <typename T>
     TGraph2DErrors* scatter_3d_raw_errors(

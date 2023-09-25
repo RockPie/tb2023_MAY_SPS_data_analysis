@@ -77,8 +77,18 @@ std::vector<std::vector<Short_t>> SJUtil::generate_mapping_croodinate(
     std::vector<std::vector<Short_t>> _mapping_croodinate_array;
 
     // * Step 1. generate one-dimensional channel num
-    for (auto i = 0; i < _array_size; i++)
-        _uni_channel_num_array.push_back(_mapping_board_num_array[i] * 64 + _mapping_channel_num_array[i]);
+    Short_t _board_num;
+    for (auto i = 0; i < _array_size; i++){
+        if (_mapping_board_num_array[i] == 1)
+            _board_num = 0;
+        else if (_mapping_board_num_array[i] == 0)
+            _board_num = 1;
+        else
+            _board_num = _mapping_board_num_array[i];
+        
+
+        _uni_channel_num_array.push_back(_board_num * 64 + _mapping_channel_num_array[i]);
+    }
 
     // * Step 2. generate x and y coordinate
     for (auto i = 0; i < _array_size; i++) {

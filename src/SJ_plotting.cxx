@@ -220,3 +220,32 @@ TGraph2D* SJPlot::scatter_3d_double_raw(
     // _graph_ptr->Draw("pcol");
     return _graph_ptr;
 }
+
+TH2D* SJPlot::hist_2d(const SJUtil::DataErrorSet2D<Double_t> &_mapped_events, Double_t max_adc){
+    TH2D *_hist = new TH2D("hist", "hist", 105, 0, 105, 105, 0, 105);
+
+    _hist->GetXaxis()->SetTitle("x");
+    _hist->GetYaxis()->SetTitle("y");
+
+    if (max_adc > 0)
+        _hist->SetMaximum(max_adc);
+
+    for (auto i = 0; i < _mapped_events.x_vec.size(); i++){
+        auto _x_coord = _mapped_events.x_vec[i];
+        auto _y_coord = _mapped_events.y_vec[i];
+        auto _z_value = _mapped_events.value_vec[i];
+        auto _cell_size = _mapped_events.cell_size[i];
+
+        auto _x_offset = _cell_size / 2.0;
+        auto _y_offset = _cell_size / 2.0;
+
+        for (auto _x = _x_coord - _x_offset; _x < _x_coord + _x_offset; _x++)
+            for (auto _y = _y_coord - _y_offset; _y < _y_coord + _y_offset; _y++)
+                _hist->Fill(_x, _y, _z_value);
+    }
+    gStyle->SetPalette(kSunset);
+    gPad->SetRightMargin(0.15);
+    _hist->SetStats(0);
+    _hist->SetContour(100);
+    return _hist;
+}

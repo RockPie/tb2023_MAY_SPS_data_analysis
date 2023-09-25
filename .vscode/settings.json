@@ -81,7 +81,11 @@
         "chrono": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "transpad.C": "cpp"
+        "transpad.C": "cpp",
+        "format": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "numeric": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
